@@ -1,0 +1,44 @@
+<lccdd>
+
+<!-- SciFi tracker parameters -->
+
+<define>
+
+<constant name = "SciFi:nLayers"  value = "4"/>
+<!-- SCSF-78 fibre parameters -->
+<constant name = "SciFi:coreFraction"  value = "0.88"/>
+<constant name = "SciFi:clad1Fraction"  value = "0.94"/>
+<constant name = "SciFi:clad2Fraction"  value = "1.0"/>
+<constant name = "SciFi:decayTimeFast"  value = "1.2"/>
+<constant name = "SciFi:decayTimeSlow"  value = "1.2"/>
+<constant name = "SciFi:yieldRatio"  value = "0.8"/>
+
+<constant name = "SciFi:interfaceLossProb"  value = "14e-4"/>
+
+<!-- SiPM parameters -->
+
+<constant name = "SciFi:airGapSensitive"          value = "0.05*mm"/>
+<constant name = "SciFi:stripThickness"           value = "0.0123*mm"/>
+<constant name = "SciFi:stripWidth"               value = "0.25*mm"/>
+<constant name = "SciFi:stripHeight"              value = "1.6*mm"/>
+<constant name = "SciFi:npixelPerStripWidth"      value = "5"/>
+<constant name = "SciFi:npixelPerStripHeight"     value = "32"/>
+<constant name = "SciFi:pixelSensitiveRatio"      value = "0.67"/>
+<constant name = "SciFi:pixelThickness"           value = "0.25*mm"/>
+
+<constant name = "bendAngle" value = "10.0*deg"/>
+<constant name = "bendDirection" value = "-1"/>
+<constant name = "twistAngle" value = "0.0*deg"/>
+
+</define>
+
+<includes>
+  <gdmlFile ref="SciFi_materials.xml"/>
+</includes>
+
+
+<detectors>
+
+</detectors>
+
+</lccdd>

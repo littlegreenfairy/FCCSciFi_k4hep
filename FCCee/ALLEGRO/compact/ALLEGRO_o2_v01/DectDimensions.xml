@@ -25,7 +25,8 @@
     <constant name="DetID_VXD_Barrel"             value=" 1"/>
     <constant name="DetID_VXD_Disks"              value=" 2"/>
 
-    <constant name="DetID_STT"                    value=" 3"/>
+    <! constant name="DetID_STT"                    value=" 3"/>
+    <constant name="DetID_SciFi_Barrel"                    value=" 3"/>
 
     <constant name="DetID_SiWr_Barrel"            value=" 23"/>
     <constant name="DetID_SiWr_Disks"             value=" 24"/>
@@ -104,9 +105,15 @@
     <constant name="VTX_z_max" value="VTXD_z_max_total"/>                         <!-- Not used, just do indicate the vertex detector envelope limits -->
 
     <!--  Straw tracker parameters    -->
-    <constant name="STT_inner_cyl_R_total"          value=" 349.8  * mm "  />
-    <constant name="STT_outer_cyl_R_total"          value=" 2015   * mm "  />    
-    <constant name="STT_half_length_total"          value=" 2750   * mm "  />
+    <!constant name="STT_inner_cyl_R_total"          value=" 349.8  * mm "  />
+    <!constant name="STT_outer_cyl_R_total"          value=" 2015   * mm "  />    
+    <!constant name="STT_half_length_total"          value=" 2750   * mm "  />
+
+    <!--  SciFi tracker parameters    -->
+    <constant name="SciFi:fibreRadius" value="0.125*mm"/>
+    <constant name="SciFi:matWidth" value="135*mm"/>  
+    <constant name="SciFi:fibreLength" value="2424*mm"/>
+    <constant name="SciFi:airGap" value="..."/>
 
     <!-- Silicon wrapper. These values can be changed at will and the geometry will adapt accordingly. For questions contact Armin Ilg -->
     <constant name="SiWrB_inner_radius" value="2040*mm"/>   <!-- Can be freely changed, as long as SiWrB_outer_radius-SiWrB_inner_radius is kept constant. A radius of up to ~3 m is supported with the currently assumed sensor size -->

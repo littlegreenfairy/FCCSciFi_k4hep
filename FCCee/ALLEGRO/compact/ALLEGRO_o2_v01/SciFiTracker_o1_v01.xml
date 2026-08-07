@@ -1,11 +1,31 @@
 <lccdd>
 
+<display>
+  <vis name="SciFi:FiberCoreVis"  r="0.9" g="0.9" b="0.1" alpha="1.0" showDaughters="true" visible="true"/>
+  <vis name="SciFi:FiberClad1Vis" r="0.5" g="0.8" b="1.0" alpha="0.6" showDaughters="true" visible="true"/>
+  <vis name="SciFi:FiberClad2Vis" r="0.3" g="0.5" b="0.9" alpha="0.4" showDaughters="true" visible="true"/>
+  <vis name="SciFi:MatVis"        r="0.8" g="0.8" b="0.8" alpha="0.15" showDaughters="true" visible="true"/>
+</display>
+
 <!-- SciFi tracker parameters -->
 
 <define>
 
+<!-- Mat Parameters -->
+
 <constant name = "SciFi:nLayers"  value = "4"/>
+<constant name = "SciFi:matWidth" value = "130*mm"/>
+<constant name = "SciFi:bendAngle" value = "10.0*deg"/>
+<constant name = "SciFi:bendDirection" value = "-1"/>
+<constant name = "SciFi:twistAngle" value = "0.0*deg"/>
+
+<!-- For now simulating only 1 mat from station 2 layer 1 -->
+<constant name = "SciFi:barrelRadius"  value = "886.8*mm"/>
+
+
 <!-- SCSF-78 fibre parameters -->
+<constant name = "SciFi:fibreRadius"  value = "0.125*mm"/>
+<constant name = "SciFi:fibreLength"  value = "4000*mm"/>
 <constant name = "SciFi:coreFraction"  value = "0.88"/>
 <constant name = "SciFi:clad1Fraction"  value = "0.94"/>
 <constant name = "SciFi:clad2Fraction"  value = "1.0"/>
@@ -26,9 +46,6 @@
 <constant name = "SciFi:pixelSensitiveRatio"      value = "0.67"/>
 <constant name = "SciFi:pixelThickness"           value = "0.25*mm"/>
 
-<constant name = "bendAngle" value = "10.0*deg"/>
-<constant name = "bendDirection" value = "-1"/>
-<constant name = "twistAngle" value = "0.0*deg"/>
 
 </define>
 
@@ -36,9 +53,13 @@
   <gdmlFile ref="SciFi_materials.xml"/>
 </includes>
 
-
 <detectors>
-
+  <detector
+      id="DetID_SciFiBarrel"
+      name="SciFiTracker"
+      type="LHCb_SciFi_geo_v1_0"
+      >
+  </detector>
 </detectors>
 
 </lccdd>

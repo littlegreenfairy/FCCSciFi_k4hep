@@ -1,3 +1,4 @@
+
 #include "Core/UpgradeTags.h"
 #include "DD4hep/DetFactoryHelper.h"
 #include "DD4hep/Printout.h"
@@ -7,7 +8,6 @@
 #include "DD4hep/OpticalSurfaces.h"
 #include <cmath>
 
-using namespace dd4hep;
 
 using namespace std;
 
@@ -35,9 +35,18 @@ namespace {
     double clad2_frac = 0.0;
     double mat_width        = 0.0;
     double fiber_length        = 0.0;
-    double station_gap    = 0.0;
     int    n_layers        = 0;
     double barrel_radius   = 0.0;
+
+    double strip_width         = 0.0;
+    double strip_height        = 0.0;
+    double strip_thickness     = 0.0;
+    double pixel_thickness     = 0.0;
+    double air_gap_sensitive   = 0.0;
+    int npixel_strip_width  = 0;
+    int npixel_strip_height = 0;
+    double pixel_sensitive_ratio = 0.0;
+
 
 
     struct Module {
@@ -48,13 +57,18 @@ namespace {
       HELPER_CLASS_DEFAULTS( Module );
     };
     std::map<std::string, Module>     m_modules;
-    std::map<std::string, DetElement> m_detElements;
+    // Unused: nothing calls registerDetElement() anymore (removed when we fixed
+    // the double-free risk on the per-fiber DetElements), so this map is always
+    // empty and detElement()/the destructor's cleanup loop below are both dead.
+    // Kept commented rather than deleted in case a future cloning-style build
+    // (e.g. repeated stations, matching the original LHCb FT geometry) needs it.
+    // std::map<std::string, DetElement> m_detElements;
     std::map<std::string, double>     HoleType;
 
-    /// Utility function to register detector elements for cloning. Will all be deleted!
-    void registerDetElement( const std::string& nam, DetElement de );
-    /// Utility function to access detector elements for cloning. Will all be deleted!
-    dd4hep::DetElement detElement( const std::string& nam ) const;
+    // /// Utility function to register detector elements for cloning. Will all be deleted!
+    // void registerDetElement( const std::string& nam, DetElement de );
+    // /// Utility function to access detector elements for cloning. Will all be deleted!
+    // dd4hep::DetElement detElement( const std::string& nam ) const;
 
     /// Initializing constructor
     SciFiBuild( dd4hep::Detector& description, xml_elt_t e, dd4hep::SensitiveDetector sens );
@@ -66,20 +80,21 @@ namespace {
     /// Default destructor
     virtual ~SciFiBuild();
     void build_fiber( dd4hep::Volume motherVol, dd4hep::Position pos );
+    dd4hep::Volume build_sipm();
     void build_mat_slab2( dd4hep::Volume motherVol );
     void build_layers();
     void build_stations();
     void build_detector();
   };
 
-  void SciFiBuild::registerDetElement( const std::string& nam, dd4hep::DetElement de ) { m_detElements[nam] = de; }
-  dd4hep::DetElement SciFiBuild::detElement( const std::string& nam ) const {
-    auto i = m_detElements.find( nam );
-    if ( i == m_detElements.end() ) {
-      dd4hep::printout( dd4hep::ERROR, "SciFi-geo", "Attempt to access non-existing detector element %s", nam.c_str() );
-    }
-    return ( *i ).second;
-  }
+  // void SciFiBuild::registerDetElement( const std::string& nam, dd4hep::DetElement de ) { m_detElements[nam] = de; }
+  // dd4hep::DetElement SciFiBuild::detElement( const std::string& nam ) const {
+  //   auto i = m_detElements.find( nam );
+  //   if ( i == m_detElements.end() ) {
+  //     dd4hep::printout( dd4hep::ERROR, "SciFi-geo", "Attempt to access non-existing detector element %s", nam.c_str() );
+  //   }
+  //   return ( *i ).second;
+  // }
 
   /// Initializing constructor
   SciFiBuild::SciFiBuild( dd4hep::Detector& dsc, xml_elt_t e, dd4hep::SensitiveDetector sens )
@@ -94,20 +109,29 @@ namespace {
         if ( n == "build_stations" ) m_build_stations = c.attr<bool>( _U( value ) );
       }
     }
+    
     fiber_radius               = dd4hep::_toDouble( "SciFi:fibreRadius" );
     core_frac       = dd4hep::_toDouble( "SciFi:coreFraction" );
     clad1_frac        = dd4hep::_toDouble( "SciFi:clad1Fraction" );
     clad2_frac        = dd4hep::_toDouble( "SciFi:clad2Fraction" );
     mat_width       = dd4hep::_toDouble( "SciFi:matWidth" );
     fiber_length        = dd4hep::_toDouble( "SciFi:fibreLength" );
-    station_gap       = dd4hep::_toDouble( "SciFi:StationGap" );
     n_layers          = dd4hep::_toInt( "SciFi:nLayers" );
     barrel_radius     = dd4hep::_toDouble( "SciFi:barrelRadius" );
+    strip_width         = dd4hep::_toDouble( "SciFi:stripWidth" );
+    strip_height        = dd4hep::_toDouble( "SciFi:stripHeight" );
+    strip_thickness     = dd4hep::_toDouble( "SciFi:stripThickness" );
+    pixel_thickness     = dd4hep::_toDouble( "SciFi:pixelThickness" );
+    air_gap_sensitive   = dd4hep::_toDouble( "SciFi:airGapSensitive" );
+    npixel_strip_width  = dd4hep::_toInt( "SciFi:npixelPerStripWidth" );
+    npixel_strip_height = dd4hep::_toInt( "SciFi:npixelPerStripHeight" );
+    pixel_sensitive_ratio = dd4hep::_toDouble( "SciFi:pixelSensitiveRatio" );
+
 
   }
 
   SciFiBuild::~SciFiBuild() {
-    for ( auto& d : m_detElements ) dd4hep::detail::destroyHandle( d.second );
+    // for ( auto& d : m_detElements ) dd4hep::detail::destroyHandle( d.second );
   }
 
   void SciFiBuild::build_fiber( dd4hep::Volume motherVol, dd4hep::Position pos ) {
@@ -116,7 +140,7 @@ namespace {
     static dd4hep::Volume         coreVol, clad1Vol, clad2Vol;
     static dd4hep::OpticalSurface coreCladSurf, cladCladSurf;
 
-    if ( !coreVol.isValid() ) {
+    if ( !coreVol.isValid() ) {  //this block is executed only once 
       dd4hep::Material fibre_core  = description.material( "ScintCoreMaterial" );
       dd4hep::Material fibre_clad1 = description.material( "InnerCladdingMaterial" );
       dd4hep::Material fibre_clad2 = description.material( "OuterCladdingMaterial" );
@@ -173,6 +197,75 @@ namespace {
     dd4hep::BorderSurface( description, clad1DE, fName + "_clad2_to_clad1", cladCladSurf, clad2PV, clad1PV );
   }
 
+  dd4hep::Volume SciFiBuild::build_sipm() {
+    static dd4hep::Volume sipmVol, stripVol, pixelVol, sensitiveVol;
+    static int n_strips_x = 0;
+
+    if ( !sipmVol.isValid()) {  //this block is executed only once
+
+      n_strips_x = (int)std::floor( mat_width / strip_width );
+      double sipm_width  = strip_width * n_strips_x;
+      double sipm_half_z = ( pixel_thickness + strip_thickness + air_gap_sensitive ) / 2.0;
+
+      // Outer container volume for the SiPMs
+      dd4hep::Box    sipmSolid( sipm_width/2.0, (strip_height*1.2)/2.0, sipm_half_z );
+      sipmVol = dd4hep::Volume( "lvSciFiSiPMArray", sipmSolid, description.air() );
+      sipmVol.setVisAttributes( description, "SciFi:SiPMVis" );
+
+      // Solid + volume for one strip
+      dd4hep::Box    stripSolid( strip_width/2.0, strip_height/2.0, strip_thickness/2.0 );
+      stripVol = dd4hep::Volume( "lvSciFiSiPMStrip", stripSolid, description.material("Epoxy") );
+      stripVol.setVisAttributes( description.invisible() );
+
+      // Solid + volume for one pixel
+      double pixel_dim_x = strip_width  / npixel_strip_width;
+      double pixel_dim_y = strip_height / npixel_strip_height;
+      dd4hep::Box pixelBase( pixel_dim_x/2.0, pixel_dim_y/2.0, pixel_thickness/2.0 );
+      dd4hep::Box sensitiveBase( pixel_dim_x*std::sqrt(pixel_sensitive_ratio)/2.0,
+                                pixel_dim_y*std::sqrt(pixel_sensitive_ratio)/2.0, pixel_thickness/2.0 );
+      dd4hep::SubtractionSolid pixelSolid( pixelBase, sensitiveBase );  // "dead" pixel shell
+
+      pixelVol = dd4hep::Volume( "lvSciFiPixel", pixelSolid, description.material("Epoxy") );
+      pixelVol.setVisAttributes( description.invisible() );
+
+      // Sensitive pixels to produce hits
+
+      sensitiveVol = dd4hep::Volume( "lvSciFiPixelSensitive", sensitiveBase, description.material("Epoxy") );
+      sensitiveVol.setVisAttributes( description.invisible() );
+      sensitiveVol.setSensitiveDetector( sensitive );
+      
+      // Vertical alignment of the strip/pixel row against the fiber stack
+
+      double y_dist_sipm = ( (0.210/0.250) * 2.0 * fiber_radius ) / 2.0;  //the local fiber-layer pitch used only inside the SiPM-placement 
+      double y_strip    = y_dist_sipm * ( n_layers / 2.0 ) - fiber_radius / 2.0 - y_dist_sipm * (double)( n_layers / 2 ); //vertical alignment of the strip row
+      double y_pix_base = y_dist_sipm * ( n_layers / 2.0 ) - fiber_radius + pixel_dim_y - y_dist_sipm * (double)( n_layers / 2 ); //vertical alignment of the pixel grid
+
+      // Strip placement
+
+      double x_offset = strip_width * (n_strips_x - 1) / 2.0;
+      for ( int k = 0; k < n_strips_x; ++k ) {
+      double x_strip = strip_width*k - x_offset;
+      dd4hep::Position stripPos( x_strip, y_strip, strip_thickness/2.0 + air_gap_sensitive - sipm_half_z );
+      sipmVol.placeVolume( stripVol, stripPos );
+
+      // Pixel placement
+      for ( int i = 0; i < npixel_strip_width; ++i ) {
+        for ( int j = 0; j < npixel_strip_height; ++j ) {
+          double px = x_strip - strip_width/2.0  + pixel_dim_x/2.0 + i*pixel_dim_x;
+          double py = y_pix_base - strip_height/2.0 + pixel_dim_y/2.0 + j*pixel_dim_y;
+          double pz = -sipm_half_z + strip_thickness + pixel_thickness/2.0 + air_gap_sensitive;
+          dd4hep::Position pixPos( px, py, pz );
+          sipmVol.placeVolume( pixelVol, pixPos );
+          // Explicit copy number so a hit's pixel (i,j) and strip (k) can be decoded back 
+          int sipm_copy_no = i + npixel_strip_width*j + k*npixel_strip_width*npixel_strip_height;
+          sipmVol.placeVolume( sensitiveVol, sipm_copy_no, pixPos );
+        }
+      }
+
+    }
+     return sipmVol;
+  }
+
   void SciFiBuild::build_mat_slab2( dd4hep::Volume motherVol ) {
 
     // Mat placement
@@ -210,6 +303,19 @@ namespace {
         build_fiber( matVol, dd4hep::Position(x_pos, y_pos, 0.0) );
       }
     }
+
+    // SiPM arrays at the two ends of the mat
+
+    double sipm_half_z = ( pixel_thickness + strip_thickness + air_gap_sensitive ) / 2.0;
+    dd4hep::Volume sipmVol = build_sipm();
+
+    dd4hep::Transform3D tr_ep1 = tr * dd4hep::Transform3D( dd4hep::RotationY(M_PI),
+                                  dd4hep::Position(0, 0, -(mat_half_len + sipm_half_z)) );  // 180deg-flipped end
+    dd4hep::Transform3D tr_ep2 = tr * dd4hep::Transform3D( dd4hep::RotationY(0.0),
+                                  dd4hep::Position(0, 0,  (mat_half_len + sipm_half_z)) );  // unflipped end
+
+    motherVol.placeVolume( sipmVol, tr_ep1 );
+    motherVol.placeVolume( sipmVol, tr_ep2 );
 
     // Place the mat volume in the mother volume
     motherVol.placeVolume( matVol, tr );

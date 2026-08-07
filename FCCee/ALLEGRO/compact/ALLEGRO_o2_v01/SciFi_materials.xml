@@ -4166,6 +4166,21 @@
       4.900000000000001*eV   1000000000000.0*mm
       "/>
 
+    <matrix name="ZERO__FiberSurfaceLoss" coldim="2" values="
+      1.771*eV 0.0
+      2.067*eV 0.0
+      2.479*eV 0.0
+      2.755*eV 0.0
+      3.099*eV 0.0
+      "/>
+    <matrix name="ONE__FiberSurfaceLoss" coldim="2" values="
+      1.771*eV 1.0
+      2.067*eV 1.0
+      2.479*eV 1.0
+      2.755*eV 1.0
+      3.099*eV 1.0
+      "/>
+
     <constant name="MIEHG_FORWARD_RATIO__EpoxyTi02" value="0.8"/>
     <constant name="MIEHG_FORWARD__EpoxyTi02" value="0.6"/>
     <constant name="MIEHG_BACKWARD__EpoxyTi02" value="0.6"/>
@@ -4250,22 +4265,19 @@
   </materials>
 
   <surfaces>
-  <opticalsurface name="Core_InnerClad_Surface" model="unified" finish="ground" type="dielectric_dielectric">
-    <constant name="SIGMAALPHA" value="SciFi:interfaceLossProb"/>
+  <opticalsurface name="Core_InnerClad_Surface" model="unified" finish="ground" type="dielectric_dielectric" value="SciFi:interfaceLossProb">
     <property name="SPECULARSPIKECONSTANT" ref="ZERO__FiberSurfaceLoss"/>
     <property name="SPECULARLOBECONSTANT"  ref="ONE__FiberSurfaceLoss"/>
     <property name="BACKSCATTERCONSTANT"   ref="ZERO__FiberSurfaceLoss"/>
   </opticalsurface>
 
-  <opticalsurface name="InnerClad_OuterClad_Surface" model="unified" finish="ground" type="dielectric_dielectric">
-    <constant name="SIGMAALPHA" value="SciFi:interfaceLossProb"/>
+  <opticalsurface name="InnerClad_OuterClad_Surface" model="unified" finish="ground" type="dielectric_dielectric" value="SciFi:interfaceLossProb">
     <property name="SPECULARSPIKECONSTANT" ref="ZERO__FiberSurfaceLoss"/>
     <property name="SPECULARLOBECONSTANT"  ref="ONE__FiberSurfaceLoss"/>
     <property name="BACKSCATTERCONSTANT"   ref="ZERO__FiberSurfaceLoss"/>
   </opticalsurface>
 
-  <opticalsurface name="OuterClad_Surface" model="unified" finish="ground" type="dielectric_dielectric">
-    <constant name="SIGMAALPHA" value="SciFi:interfaceLossProb"/>
+  <opticalsurface name="OuterClad_Surface" model="unified" finish="ground" type="dielectric_dielectric" value="SciFi:interfaceLossProb">
     <property name="SPECULARSPIKECONSTANT" ref="ZERO__FiberSurfaceLoss"/>
     <property name="SPECULARLOBECONSTANT"  ref="ONE__FiberSurfaceLoss"/>
     <property name="BACKSCATTERCONSTANT"   ref="ZERO__FiberSurfaceLoss"/>

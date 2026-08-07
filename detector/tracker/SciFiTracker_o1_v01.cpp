@@ -57,11 +57,9 @@ namespace {
       HELPER_CLASS_DEFAULTS( Module );
     };
     std::map<std::string, Module>     m_modules;
-    // Unused: nothing calls registerDetElement() anymore (removed when we fixed
-    // the double-free risk on the per-fiber DetElements), so this map is always
-    // empty and detElement()/the destructor's cleanup loop below are both dead.
-    // Kept commented rather than deleted in case a future cloning-style build
-    // (e.g. repeated stations, matching the original LHCb FT geometry) needs it.
+    // Unused: nothing calls registerDetElement() anymore 
+    // Kept commented in case a future cloning-style build
+    // (e.g. repeated stations) needs it.
     // std::map<std::string, DetElement> m_detElements;
     std::map<std::string, double>     HoleType;
 

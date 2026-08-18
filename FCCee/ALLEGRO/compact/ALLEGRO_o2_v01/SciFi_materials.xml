@@ -4102,6 +4102,21 @@
     <!-- TiO2-loaded epoxy reflective coating -->
 
     <!-- fixed value -->
+    <!-- Flat (non-dispersive) properties for the SiPM pixel's Epoxy, matching
+         Epoxy_RIND=1.59 / Epoxy_ABS=0.1*m in the standalone SciFiMatG4 app's
+         DefineMaterialProperties() (DetectorConstruction.cc:380,390,398-401).
+         Needed so G4OpticalBoundaryProcess has a defined interface where a
+         photon reaches the sensitive pixel volume. -->
+    <matrix name="RINDEX__Epoxy" coldim="2" values="
+      1.9*eV    1.59
+      4.4275*eV 1.59
+      "/>
+
+    <matrix name="ABSLENGTH__Epoxy" coldim="2" values="
+      1.9*eV    0.1*m
+      4.4275*eV 0.1*m
+      "/>
+
     <matrix name="RINDEX__EpoxyTi02" coldim="2" values="
       1.77*eV  1.59
       3.54*eV  1.59
@@ -4242,6 +4257,8 @@
       <composite n="21" ref="C"/>
       <composite n="24" ref="H"/>
       <composite n="4" ref="O"/>
+      <property name="RINDEX"    ref="RINDEX__Epoxy"/>
+      <property name="ABSLENGTH" ref="ABSLENGTH__Epoxy"/>
     </material>
 
     <material name="TiO2">

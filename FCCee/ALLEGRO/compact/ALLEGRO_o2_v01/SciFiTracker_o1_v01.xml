@@ -1,5 +1,12 @@
 <lccdd>
 
+<readouts>
+    <readout name="SciFiTrackerCollection">
+        <id>system:5,side:1,strip:10,pixelX:3,pixelY:5</id>
+        <!-- the system field identifies the subdetector -->
+    </readout>
+</readouts>
+
 <display>
   <vis name="SciFi:FiberCoreVis"  r="0.9" g="0.9" b="0.1" alpha="1.0" showDaughters="true" visible="true"/>
   <vis name="SciFi:FiberClad1Vis" r="0.5" g="0.8" b="1.0" alpha="0.6" showDaughters="true" visible="true"/>
@@ -14,7 +21,7 @@
 <!-- Mat Parameters -->
 
 <constant name = "SciFi:nLayers"  value = "4"/>
-<constant name = "SciFi:matWidth" value = "130*mm"/>
+<!-- SciFi:matWidth is defined once, in DectDimensions.xml, to avoid a silent duplicate-definition conflict -->
 <constant name = "SciFi:bendAngle" value = "10.0*deg"/>
 <constant name = "SciFi:bendDirection" value = "-1"/>
 <constant name = "SciFi:twistAngle" value = "0.0*deg"/>
@@ -25,7 +32,7 @@
 
 <!-- SCSF-78 fibre parameters -->
 <constant name = "SciFi:fibreRadius"  value = "0.125*mm"/>
-<constant name = "SciFi:fibreLength"  value = "4000*mm"/>
+<!-- SciFi:fibreLength is defined once, in DectDimensions.xml, to avoid a silent duplicate-definition conflict -->
 <constant name = "SciFi:coreFraction"  value = "0.88"/>
 <constant name = "SciFi:clad1Fraction"  value = "0.94"/>
 <constant name = "SciFi:clad2Fraction"  value = "1.0"/>
@@ -55,9 +62,10 @@
 
 <detectors>
   <detector
-      id="DetID_SciFiBarrel"
+      id="DetID_SciFi_Barrel"
       name="SciFiTracker"
       type="LHCb_SciFi_geo_v1_0"
+      readout="SciFiTrackerCollection"
       >
   </detector>
 </detectors>

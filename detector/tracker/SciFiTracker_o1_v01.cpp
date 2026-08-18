@@ -1,5 +1,5 @@
 
-#include "Core/UpgradeTags.h"
+//#include "Core/UpgradeTags.h"
 #include "DD4hep/DetFactoryHelper.h"
 #include "DD4hep/Printout.h"
 #include "DD4hep/detail/DetectorInterna.h"
@@ -244,7 +244,7 @@ namespace {
       for ( int k = 0; k < n_strips_x; ++k ) {
       double x_strip = strip_width*k - x_offset;
       dd4hep::Position stripPos( x_strip, y_strip, strip_thickness/2.0 + air_gap_sensitive - sipm_half_z );
-      sipmVol.placeVolume( stripVol, stripPos );
+      dd4hep::PlacedVolume stripPV = sipmVol.placeVolume( stripVol, stripPos );
 
       // Pixel placement
       for ( int i = 0; i < npixel_strip_width; ++i ) {
@@ -253,15 +253,19 @@ namespace {
           double py = y_pix_base - strip_height/2.0 + pixel_dim_y/2.0 + j*pixel_dim_y;
           double pz = -sipm_half_z + strip_thickness + pixel_thickness/2.0 + air_gap_sensitive;
           dd4hep::Position pixPos( px, py, pz );
-          sipmVol.placeVolume( pixelVol, pixPos );
+          dd4hep::PlacedVolume pixelPV = sipmVol.placeVolume( pixelVol, pixPos );
           // Explicit copy number so a hit's pixel (i,j) and strip (k) can be decoded back 
           int sipm_copy_no = i + npixel_strip_width*j + k*npixel_strip_width*npixel_strip_height;
-          sipmVol.placeVolume( sensitiveVol, sipm_copy_no, pixPos );
+          dd4hep::PlacedVolume pixelsensitiveareaPV =sipmVol.placeVolume( sensitiveVol, sipm_copy_no, pixPos );
+          pixelsensitiveareaPV.addPhysVolID( "strip", k );
+          pixelsensitiveareaPV.addPhysVolID( "pixelX", i );
+          pixelsensitiveareaPV.addPhysVolID( "pixelY", j );
         }
       }
 
     }
-     return sipmVol;
+    }  
+    return sipmVol;
   }
 
   void SciFiBuild::build_mat_slab2( dd4hep::Volume motherVol ) {
@@ -293,6 +297,7 @@ namespace {
     double center_idx_x = (n_fibers_x - 1.0) / 2.0;
     double center_idx_y = (n_fibers_y - 1.0) / 2.0;
 
+
     for (int j = 0; j < n_fibers_y; ++j) {
       double x_displ = (j % 2 == 0) ? -x_dist/4.0 : x_dist/4.0;
       double y_pos   = (center_idx_y - j) * y_dist;
@@ -312,8 +317,11 @@ namespace {
     dd4hep::Transform3D tr_ep2 = tr * dd4hep::Transform3D( dd4hep::RotationY(0.0),
                                   dd4hep::Position(0, 0,  (mat_half_len + sipm_half_z)) );  // unflipped end
 
-    motherVol.placeVolume( sipmVol, tr_ep1 );
-    motherVol.placeVolume( sipmVol, tr_ep2 );
+    dd4hep::PlacedVolume sipm1PV = motherVol.placeVolume( sipmVol, tr_ep1 );
+    sipm1PV.addPhysVolID( "side", 0 ); //back readout
+    dd4hep::PlacedVolume sipm2PV = motherVol.placeVolume( sipmVol, tr_ep2 );
+    sipm2PV.addPhysVolID( "side", 1 ); //front readout
+
 
     // Place the mat volume in the mother volume
     motherVol.placeVolume( matVol, tr );
@@ -325,15 +333,17 @@ namespace {
     dd4hep::Assembly     scifi_vol( "lvSciFi" );
 
     scifi_vol.setVisAttributes( description.invisible() );
-    sensitive.setType( "tracker" );
+    sensitive.setType( "tracker" ); //the G4 sensitive detector class used will be Geant4SimpleTrackerAction
     load( x_det, "include" );
 
-    // Detailed per-fiber model, replacing the old homogenized build_mats().
+    // Detailed per-fiber model
     build_mat_slab2( scifi_vol );
 
-    xml_h x_tr = x_det.child( _U( transformation ) );
-    pv         = placeDetector( scifi_vol, x_tr );
-    pv.addPhysVolID( "system", id );
+    //xml_h x_tr = x_det.child( _U( transformation ) );
+    pv = placeDetector( scifi_vol);
+    pv.addPhysVolID( "system", id ); 
+    //"system" is the name of the field in the xml file, "id" is the bitfield value of the field
+    //In this case the ID of the SciFiBarrel is set to 3 in the xml file of ALLEGRO
   }
 } // namespace
 

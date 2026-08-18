@@ -31,8 +31,8 @@
   <include ref="./DectDimensions.xml" />
 
   <!-- shape based model of the beam pipe -->
-  <include ref="../../../MDI/compact/MDI_o1_v00/Beampipe_o4_v05.xml" />
-  <include ref="../../../MDI/compact/MDI_o1_v00/BeamInstrumentation_o1_v01.xml" />
+  <!-- <include ref="../../../MDI/compact/MDI_o1_v00/Beampipe_o4_v05.xml" /> -->
+  <!-- <include ref="../../../MDI/compact/MDI_o1_v00/BeamInstrumentation_o1_v01.xml" /> -->
   
   <!-- In order to use the CAD beampipe, build k4geo with the following CMake option: 
   cmake -D INSTALL_BEAMPIPE_STL_FILES=ON which will download the files needed -->
@@ -40,19 +40,19 @@
   <!-- <include ref="../../../MDI/compact/MDI_o1_CADBased_v01/MDI_o1_CADBased_v01_collection.xml" />
   <world material="Vacuum"/> -->
 
-  <include ref="../ALLEGRO_o1_v03/LumiCal.xml"/>
-  <include ref="../../../IDEA/compact/IDEA_o1_v04/VertexComplete_o1_v04.xml"/>
+  <!-- <include ref="../ALLEGRO_o1_v03/LumiCal.xml"/> -->
+  <!-- <include ref="../../../IDEA/compact/IDEA_o1_v04/VertexComplete_o1_v04.xml"/> -->
   <!-- StrawTubeTracker replaced by the SciFi tracker below; both are reserved
        to detector-ID slot 3 in DectDimensions.xml (DetID_STT / DetID_SciFi_Barrel),
        so only one can be active at a time. -->
   <!-- <include ref="StrawTubeTracker_o1_v01.xml"/> -->
-  <include ref="SciFiTracker_o1_v01.xml"/>
-  <include ref="../../../IDEA/compact/IDEA_o1_v04/SiliconWrapper_o1_v02.xml"/>
-  <include ref="../ALLEGRO_o1_v03/ECalBarrel_thetamodulemerged.xml"/> <!-- Caution: removing the ECAL barrel also removes the magnetic field! The solenoid is hosted in the ECAL barrel cryostat and therefore the B-field is defined there -->
-  <include ref="../ALLEGRO_o1_v03/HCalBarrel_TileCal_v03.xml"/>
-  <include ref="../ALLEGRO_o1_v03/ECalEndcaps_Turbine_o1_v03.xml"/>
-  <include ref="../ALLEGRO_o1_v03/HCalEndcaps_ThreeParts_TileCal_v03.xml"/>
-  <include ref="../ALLEGRO_o1_v03/MuonTaggerPhiTheta.xml"/>
+  <include ref="SciFiTracker_o1_v01.xml"/> 
+  <!-- <include ref="../../../IDEA/compact/IDEA_o1_v04/SiliconWrapper_o1_v02.xml"/> -->
+  <!-- <include ref="../ALLEGRO_o1_v03/ECalBarrel_thetamodulemerged.xml"/> --> <!-- Caution: removing the ECAL barrel also removes the magnetic field! The solenoid is hosted in the ECAL barrel cryostat and therefore the B-field is defined there -->
+  <!-- <include ref="../ALLEGRO_o1_v03/HCalBarrel_TileCal_v03.xml"/> -->
+  <!-- <include ref="../ALLEGRO_o1_v03/ECalEndcaps_Turbine_o1_v03.xml"/> -->
+  <!-- <include ref="../ALLEGRO_o1_v03/HCalEndcaps_ThreeParts_TileCal_v03.xml"/> -->
+  <!-- <include ref="../ALLEGRO_o1_v03/MuonTaggerPhiTheta.xml"/> -->
 
   <!-- Include plugins attaching additional info to the geometry and needed to generate edm4hep::TrackerHitPlane, see e.g. CLD detector-concept case https://github.com/key4hep/k4geo/blob/main/FCCee/CLD/compact/CLD_o2_v08/CLD_o2_v08.xml#L333-L390 -->
   <plugins>

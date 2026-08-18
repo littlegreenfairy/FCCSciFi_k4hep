@@ -1,0 +1,421 @@
+#ifndef DETECTORSEGMENTATIONS_HCALPHIROW_K4GEO_H
+#define DETECTORSEGMENTATIONS_HCALPHIROW_K4GEO_H
+
+#include "DDSegmentation/Segmentation.h"
+#include "DDSegmentation/SegmentationUtil.h"
+
+#include <array>
+#include <atomic>
+#include <span>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
+/** FCCSWHCalPhiRow_k4geo Detector/detectorSegmentations/detectorSegmentations/FCCSWHCalPhiRow_k4geo.h
+ * FCCSWHCalPhiRow_k4geo.h
+ *
+ *  Segmentation in row and phi.
+ *
+ *  Cells are defined in r-z plan by merging the row/sequence of scintillator/absorber.
+ *  Each row consists of 2 * Master_Plate + 1 * Spacer_Plate + 1 * Scintillator.
+ *  Considering a single row as a single cell gives the highest possible granularity.
+ *  Cells in both Barrel and Endcap compose radial layers.
+ *  Cells with the same index in different radial layers of a given Endcap section share the same z-coordinate
+ * and can therefore be grouped into pseudo-layers along z.
+ *  More details:
+ * https://indico.cern.ch/event/1475808/contributions/6219554/attachments/2966253/5218774/FCC_FullSim_HCal_slides.pdf
+ *  Illustration of Endcap pseudo-layers (slide 15):
+ * https://indico.cern.ch/event/1593770/contributions/6745243/attachments/3155256/5604202/ALLEGRO_HCAL_simulation_studies.pdf
+ */
+
+namespace dd4hep {
+namespace DDSegmentation {
+  class FCCSWHCalPhiRow_k4geo : public Segmentation {
+  public:
+    /// default constructor using an arbitrary type
+    FCCSWHCalPhiRow_k4geo(const std::string& aCellEncoding);
+    /// Default constructor used by derived classes passing an existing decoder
+    FCCSWHCalPhiRow_k4geo(const BitFieldCoder* decoder);
+
+    /**  Determine the position of HCal cell based on the cellID.
+     *   @param[in] aCellID ID of a cell.
+     *   return Position (radius = 1).
+     */
+    virtual Vector3D position(const CellID& aCellID) const override;
+
+    /**  Assign a cellID based on the global position.
+     *  @param[in] aLocalPosition (not used).
+     *  @param[in] aGlobalPosition position in the global coordinates.
+     *  @param[in] aVolumeID ID of a volume.
+     *  return Cell ID.
+     */
+    virtual CellID cellID(const Vector3D& aLocalPosition, const Vector3D& aGlobalPosition,
+                          const VolumeID& aVolumeID) const override;
+
+    /**  Find neighbours of the cell
+     *   Definition of neighbours is explained on slide 7:
+     * https://indico.cern.ch/event/1475808/contributions/6219554/attachments/2966253/5218774/FCC_FullSim_HCal_slides.pdf
+     *   @param[in] cID ID of a cell.
+     *   return vector of neighbour cellIDs.
+     */
+    std::vector<uint64_t> neighbours(const CellID cID) const;
+
+    /**  Find neighbours of the cell.
+     *   Implement the signature from the Segmentation base class.
+     */
+    virtual void neighbours(const CellID& cellID, std::set<CellID>& neighbours) const override;
+
+    /**  Determine the azimuthal angle of HCal cell based on the cellID.
+     *   @param[in] aCellID ID of a cell.
+     *   return Phi.
+     */
+    double phi(const CellID aCellID) const;
+
+    /**  Get the grid size in phi.
+     *   return Grid size in phi.
+     */
+    inline double gridSizePhi() const { return 2 * M_PI / static_cast<double>(m_phiBins); }
+
+    /**  Get the number of bins in azimuthal angle.
+     *   return Number of bins in phi.
+     */
+    inline int phiBins() const { return m_phiBins; }
+
+    /**  Get the coordinate offset in azimuthal angle, which is the center of cell with m_phiID=0.
+     *   return The offset in phi.
+     */
+    inline double offsetPhi() const { return m_offsetPhi; }
+
+    /**  Get the grid size in row for each layer.
+     *   return Grid size in row.
+     */
+    inline const std::vector<int>& gridSizeRow() const { return m_gridSizeRow; }
+
+    /**  Determine the polar angle of HCal cell center based on the cellID.
+     *   @param[in] aCellID ID of a cell.
+     *   return Theta.
+     */
+    inline double theta(const CellID aCellID) const {
+      return dd4hep::DDSegmentation::Util::thetaFromXYZ(position(aCellID));
+    }
+
+    /**  Determine the minimum and maximum polar angle of HCal cell based on the cellID.
+     *   @param[in] cID ID of a cell.
+     *   return Theta.
+     */
+    std::array<double, 2> cellTheta(const CellID cID) const;
+
+    /**  Get the vector of cell indexes in a given layer.
+     */
+    inline const std::vector<int>& cellIndexes(const uint layer) const {
+      const LayerInfo& li = getLayerInfo(layer);
+      return li.cellIndexes;
+    }
+
+    /**  Get the thetaMax needed for SW clustering
+     *   return max theta value of the detector
+     */
+    double thetaMax() const;
+
+    /**  Get the min and max layer indexes of each HCal part.
+     * For Endcap, returns the three elements vector, while for Barrel - single element vector.
+     */
+    std::vector<std::pair<uint, uint>> getMinMaxLayerId() const;
+
+    /**  Get the coordinate offset in z-axis.
+     *   Offset is the middle position of the Barrel or each section of the Endcap.
+     *   For the Barrel, the vector size is 1, while for the Endcap - number of section.
+     *   return The offset in z.
+     */
+    inline const std::vector<double>& offsetZ() const { return m_offsetZ; }
+
+    /**  Get the z length of the layer.
+     *   return the z length.
+     */
+    inline const std::vector<double>& widthZ() const { return m_widthZ; }
+
+    /**  Get the coordinate offset in radius.
+     *   Offset is the inner radius of the first layer in the Barrel or in each section of the Endcap.
+     *   For the Barrel, the vector size is 1, while for the Endcap - number of sections.
+     *   return the offset in radius.
+     */
+    inline const std::vector<double>& offsetR() const { return m_offsetR; }
+
+    /**  Get the number of layers for each different thickness retrieved with dRlayer().
+     *   For the Barrel, the vector size equals to the number of different thicknesses used to form the layers.
+     *   For the Endcap, the vector size equals to the number of sections in the Endcap times the number of different
+     * thicknesses used to form the layers. return the number of layers.
+     */
+    inline const std::vector<int>& numLayers() const { return m_numLayers; }
+
+    /**  Get the dR (thickness) of layers.
+     *   The size of the vector equals to the number of different thicknesses used to form the layers.
+     *   return the dR.
+     */
+    inline const std::vector<double>& dRlayer() const { return m_dRlayer; }
+
+    /**  Get the number of rows per physical radial layer to be grouped in a longitudinal pseudo-layer.
+     *   This is used only for the Endcap.
+     *   The vector size equals to the number of sections in the Endcap times the number of pseudo-layers per section.
+     */
+    inline const std::vector<int>& groupedRows() const { return m_groupedRows; }
+
+    /**  Get the field name for azimuthal angle.
+     *   return The field name for phi.
+     */
+    inline const std::string& fieldNamePhi() const { return m_phiID; }
+
+    /**  Get the field name for layer.
+     *   return The field name for layer.
+     */
+    inline const std::string& fieldNameLayer() const { return m_layerID; }
+
+    /**  Get the field name for pseudoLayer.
+     *   return The field name for pseudoLayer.
+     */
+    inline const std::string& fieldNamePseudoLayer() const { return m_pseudoLayerID; }
+
+    /**  Get the field name for row number.
+     *   return The field name for row.
+     */
+    inline const std::string& fieldNameRow() const { return m_rowID; }
+
+    /**  Get the layer for a cell given cell ID
+     *   @param[in] aCellID the cell ID
+     *   return The layer number
+     */
+    inline int layer(const CellID aCellID) const { return _decoder->get(aCellID, fieldNameLayer()); }
+
+    /**  Get the pseudo-layer for a given cell ID (available only for endcap)
+     *   @param[in] cID the cell ID
+     *   return The pseudo-layer number
+     */
+    unsigned int definePseudoLayer(const CellID cID) const;
+
+    /**  Set the number of bins in azimuthal angle.
+     *   @param[in] bins Number of bins in phi.
+     */
+    inline void setPhiBins(int bins) { m_phiBins = bins; }
+
+    /**  Set the coordinate offset in azimuthal angle.
+     *   @param[in] offset Offset in phi.
+     */
+    inline void setOffsetPhi(double offset) { m_offsetPhi = offset; }
+
+    /**  Set the grid size in theta angle.
+     *   @param[in] size Cell size in theta.
+     */
+    inline void setGridSizeRow(std::vector<int> const& size) { m_gridSizeRow = size; }
+
+    /**  Set the number of rows to be grouped in a pseudo-layer of the Endcap.
+     *   @param[in] aSize number of rows to be grouped.
+     */
+    inline void setGroupedRows(std::vector<int> const& size) { m_groupedRows = size; }
+
+    /**  Set the detector layout (0 = Barrel; 1 = Endcap).
+     *   @param[in] detLayout
+     */
+    inline void setDetLayout(int detLayout) { m_detLayout = detLayout; }
+
+    /**  Set the coordinate offset in z-axis.
+     *   @param[in] offset in z (centre of the layer).
+     */
+    inline void setOffsetZ(std::vector<double> const& offset) { m_offsetZ = offset; }
+
+    /**  Set the z width.
+     *   @param[in] width in z.
+     */
+    inline void setWidthZ(std::vector<double> const& width) { m_widthZ = width; }
+
+    /**  Set the coordinate offset in radius.
+     *   @param[in] offset in radius.
+     */
+    inline void setOffsetR(std::vector<double> const& offset) { m_offsetR = offset; }
+
+    /**  Set the number of layers.
+     *   @param[in] num number of layers
+     */
+    inline void setNumLayers(std::vector<int> const& num) { m_numLayers = num; }
+
+    /**  Set the dR of layers.
+     *   @param[in] dRlayer dR of layers.
+     */
+    inline void setdRlayer(std::vector<double> const& dRlayer) { m_dRlayer = dRlayer; }
+
+    /**  Set the field name used for azimuthal angle.
+     *   @param[in] fieldName Field name for phi.
+     */
+    inline void setFieldNamePhi(const std::string& fieldName) { m_phiID = fieldName; }
+
+    /**  Set the field name used for row number.
+     *   @param[in] fieldName Field name for row.
+     */
+    inline void setFieldNameRow(const std::string& fieldName) { m_rowID = fieldName; }
+
+    /** Returns a std::vector<double> of the cellDimensions of the given cell ID as required by PandoraPFA
+     *  cellSize0: cell size along the z-axis in BARREL, cell size in radial direction in ENDCAP
+     *  cellSize1: cell size along the axis perpendicular to the cellSize0 and thickness
+     *  @param[in] cID
+     *  return a std::vector of size 2 with the cellDimensions of the given cell ID (cellSize0, cellSize1)
+     */
+    virtual std::vector<double> cellDimensions(const CellID& cID) const override {
+      float cellSize0 = 0.;
+      float cellSize1 = 0.;
+
+      const int layerID = layer(cID);
+      const LayerInfo& li = getLayerInfo(layerID);
+
+      cellSize0 = (m_detLayout == 0) ? gridSizeRow()[layerID] * m_dz_row : 2. * li.halfDepth;
+      cellSize1 = 2. * li.radius * std::sin(gridSizePhi() / 2.);
+
+      return {cellSize0, cellSize1};
+    }
+
+    /// Determine the volume ID containing a cellID.
+    virtual VolumeID volumeID(const CellID& cellID) const override;
+
+    /// Return true if this segmentation can have cells that span multiple
+    /// volumes.  That is, points from multiple distinct volumes may
+    /// be assigned to the same cell.
+    virtual bool cellsSpanVolumes() const override { return true; }
+
+  private:
+    /// the number of bins in phi
+    int m_phiBins;
+    /// the coordinate offset in phi
+    double m_offsetPhi;
+    /// the field name used for phi
+    std::string m_phiID;
+    /// the field name used for layer
+    std::string m_layerID;
+    /// the field name used for pseudo-layer
+    std::string m_pseudoLayerID;
+    /// the grid size in row for each layer
+    std::vector<int> m_gridSizeRow;
+    /// number of rows to be grouped in a pseudo-layer of the Endcap
+    std::vector<int> m_groupedRows;
+    /// dz of row
+    double m_dz_row;
+    /// the field name used for row
+    std::string m_rowID;
+    /// the detector layout (0 = Barrel; 1 = Endcap)
+    int m_detLayout;
+    /// the z offset of middle of the layer
+    std::vector<double> m_offsetZ;
+    /// the z width of the layer
+    std::vector<double> m_widthZ;
+    /// the radius of the layer
+    std::vector<double> m_offsetR;
+    /// number of layers
+    std::vector<int> m_numLayers;
+    /// dR of the layer
+    std::vector<double> m_dRlayer;
+    /// Offset in z of the center of the sensitive volume within a row
+    /// for even layers.  (sequence_a for barrel, sequence_b for endcap.)
+    double m_evenVolOffset;
+    /// Offset in z of the center of the sensitive volume within a row
+    /// for odd layers.  (sequence_b for barrel, sequence_a for endcap.)
+    double m_oddVolOffset;
+
+    /// Initialization common to all ctors.
+    void commonSetup();
+    /// the field index used for layer
+    int m_layerIndex = -1;
+    /// the field index used for pseudo-layer
+    int m_pseudoLayerIndex = -1;
+    /// the field index used for row
+    int m_rowIndex = -1;
+    /// the field index used for type
+    int m_typeIndex = -1;
+    /// the field index used for phi
+    int m_phiIndex = -1;
+
+    // Derived geometrical information about each layer.
+    struct LayerInfo {
+      /// Type/section of the layer (only relevant for endcap).
+      unsigned int type = 0;
+
+      /// Radius of the layer.
+      double radius = 1;
+
+      /// Half the layer depth (dR).
+      double halfDepth = 0;
+
+      /// z-min and z-max of the layer
+      double zmin = 0;
+      double zmax = 0;
+
+      /// z-offset between cell centers and volume centers.
+      double zOffset = 0;
+
+      /// cell indexes in each layer
+      std::vector<int> cellIndexes{};
+
+      /// z-min and z-max of each cell in the layer
+      // For the endcap, we only store the positive half.
+      struct Edge {
+        double low;
+        double high;
+      };
+      std::vector<Edge> m_cellEdge{};
+      int m_ibin = 0; // Index of first bin in m_cellEdges.
+
+      /// Return z-min and z-max for cell with row index idx.
+      Edge cellEdge(int idx) const {
+        if (idx > 0) {
+          if (idx < m_ibin)
+            throw std::out_of_range("cellEdge");
+          return m_cellEdge[idx - m_ibin];
+        } else {
+          if (-idx < m_ibin)
+            throw std::out_of_range("cellEdge");
+          const auto& e = m_cellEdge[-idx - m_ibin];
+          // Swap the edges and make them negative for the negative endcap side
+          return Edge{-e.high, -e.low};
+        }
+      }
+
+      /// number of rows to be grouped in a pseudo-layer of the Endcap
+      std::span<const int> groupedRows{};
+    };
+
+    // The vector of tabulated values, indexed by layer number.
+    // We can't build this in the constructor --- the volumes won't have
+    // been created yet.  Instead, build it lazily the first time it's needed.
+    // Since that's in a const method, make it thread-safe.
+    mutable std::atomic<const std::vector<LayerInfo>*> m_layerInfo = nullptr;
+
+    // Retrieve the derived geometrical information for a given layer.
+    const LayerInfo& getLayerInfo(const unsigned layer) const;
+
+    /**  Construct the derived geometrical information.
+     * Calculate layer radii and edges in z-axis, then define cell edges in each layer using defineCellEdges().
+     *    Following member variables are calculated:
+     *      radius
+     *      layerEdges
+     *      layerDepth
+     *      thetaBins (updated through defineCellEdges())
+     *      cellEdges* (updated through defineCellEdges())
+     */
+    std::vector<LayerInfo> initLayerInfo() const;
+
+    /**  Define cell indexes for the given layer.
+     *  This function fills the cellIndexes vector per layer with the cell indexes.
+     *  The cell index is encoded in CellID with "row" field.
+     *  In case of a cell with single row/sequence, the index is directly the number of row in the layer.
+     *  In case of a cell with several rows/sequences merged, the index is the number of cell in the layer.
+     *  For the layers of negative-z Endcap, indexes of cells are negative.
+     *  Following member variables are calculated:
+     *   cellIndexes
+     *   cellEdges
+     *   @param[in] li Layer info entry corresponding to layer.
+     *   @param[in] layer index
+     */
+    void defineCellIndexes(LayerInfo& li, const unsigned int layer) const;
+
+    // Check consistency of input geometric variables.
+    bool checkParameters() const;
+  };
+} // namespace DDSegmentation
+} // namespace dd4hep
+#endif /* DETSEGMENTATION_HCALPHITHETA_H */

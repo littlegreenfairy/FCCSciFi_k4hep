@@ -1,0 +1,252 @@
+{
+  "Event 0": {
+    "MCParticles": {
+      "collID": 2714477136,
+      "collSchemaVersion": 6,
+      "collType": "edm4hep::MCParticleCollection",
+      "collection": [
+        {
+          "PDG": 13,
+          "charge": -1.0,
+          "daughters": [],
+          "endpoint": {
+            "x": 13862.324813562105,
+            "y": 3237.807782091002,
+            "z": -25000.0
+          },
+          "generatorStatus": 1,
+          "helicity": 0,
+          "mass": 0.1056583715,
+          "momentum": {
+            "x": 4.8188148583639085,
+            "y": 1.1207584103131079,
+            "z": -8.690392623266435
+          },
+          "momentumAtEndpoint": {
+            "x": 4.814042551222222,
+            "y": 1.1264448549524861,
+            "z": -8.684290828086919
+          },
+          "parents": [],
+          "simulatorStatus": 33554432,
+          "time": 0.0,
+          "vertex": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        }
+      ],
+      "isSubsetColl": false
+    },
+    "SciFiTrackerCollection": {
+      "collID": 2402077386,
+      "collSchemaVersion": 6,
+      "collType": "edm4hep::SimTrackerHitCollection",
+      "collection": [],
+      "isSubsetColl": false
+    },
+    "edm4hepVersion": "1.0.0",
+    "podioVersion": "1.7.0"
+  },
+  "Event 1": {
+    "MCParticles": {
+      "collID": 2714477136,
+      "collSchemaVersion": 6,
+      "collType": "edm4hep::MCParticleCollection",
+      "collection": [
+        {
+          "PDG": 13,
+          "charge": -1.0,
+          "daughters": [],
+          "endpoint": {
+            "x": -7490.0402426863375,
+            "y": 15793.740769311404,
+            "z": 25000.0
+          },
+          "generatorStatus": 1,
+          "helicity": 0,
+          "mass": 0.1056583715,
+          "momentum": {
+            "x": -2.4565024664127164,
+            "y": 5.176225887503283,
+            "z": 8.195869764341614
+          },
+          "momentumAtEndpoint": {
+            "x": -2.4519432911492594,
+            "y": 5.1726620474015625,
+            "z": 8.189098882955966
+          },
+          "parents": [],
+          "simulatorStatus": 33554432,
+          "time": 0.0,
+          "vertex": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        }
+      ],
+      "isSubsetColl": false
+    },
+    "SciFiTrackerCollection": {
+      "collID": 2402077386,
+      "collSchemaVersion": 6,
+      "collType": "edm4hep::SimTrackerHitCollection",
+      "collection": [],
+      "isSubsetColl": false
+    },
+    "edm4hepVersion": "1.0.0",
+    "podioVersion": "1.7.0"
+  },
+  "Event 2": {
+    "MCParticles": {
+      "collID": 2714477136,
+      "collSchemaVersion": 6,
+      "collType": "edm4hep::MCParticleCollection",
+      "collection": [
+        {
+          "PDG": 13,
+          "charge": -1.0,
+          "daughters": [],
+          "endpoint": {
+            "x": -10546.909740654279,
+            "y": -25000.0,
+            "z": 21062.851073139784
+          },
+          "generatorStatus": 1,
+          "helicity": 0,
+          "mass": 0.1056583715,
+          "momentum": {
+            "x": -3.0719823725792215,
+            "y": -7.279968158927583,
+            "z": 6.129028300437441
+          },
+          "momentumAtEndpoint": {
+            "x": -3.067153889458481,
+            "y": -7.268659304616281,
+            "z": 6.130384238785632
+          },
+          "parents": [],
+          "simulatorStatus": 33554432,
+          "time": 0.0,
+          "vertex": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        }
+      ],
+      "isSubsetColl": false
+    },
+    "SciFiTrackerCollection": {
+      "collID": 2402077386,
+      "collSchemaVersion": 6,
+      "collType": "edm4hep::SimTrackerHitCollection",
+      "collection": [],
+      "isSubsetColl": false
+    },
+    "edm4hepVersion": "1.0.0",
+    "podioVersion": "1.7.0"
+  },
+  "Event 3": {
+    "MCParticles": {
+      "collID": 2714477136,
+      "collSchemaVersion": 6,
+      "collType": "edm4hep::MCParticleCollection",
+      "collection": [
+        {
+          "PDG": 13,
+          "charge": -1.0,
+          "daughters": [],
+          "endpoint": {
+            "x": 10881.474870788697,
+            "y": 8928.471271597318,
+            "z": -25000.0
+          },
+          "generatorStatus": 1,
+          "helicity": 0,
+          "mass": 0.1056583715,
+          "momentum": {
+            "x": 3.794048270117816,
+            "y": 3.115794993679711,
+            "z": -8.711889535650487
+          },
+          "momentumAtEndpoint": {
+            "x": 3.7907363136919856,
+            "y": 3.1074044782260977,
+            "z": -8.708408850451326
+          },
+          "parents": [],
+          "simulatorStatus": 33554432,
+          "time": 0.0,
+          "vertex": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        }
+      ],
+      "isSubsetColl": false
+    },
+    "SciFiTrackerCollection": {
+      "collID": 2402077386,
+      "collSchemaVersion": 6,
+      "collType": "edm4hep::SimTrackerHitCollection",
+      "collection": [],
+      "isSubsetColl": false
+    },
+    "edm4hepVersion": "1.0.0",
+    "podioVersion": "1.7.0"
+  },
+  "Event 4": {
+    "MCParticles": {
+      "collID": 2714477136,
+      "collSchemaVersion": 6,
+      "collType": "edm4hep::MCParticleCollection",
+      "collection": [
+        {
+          "PDG": 13,
+          "charge": -1.0,
+          "daughters": [],
+          "endpoint": {
+            "x": -8849.128762954771,
+            "y": -10897.744249203552,
+            "z": 25000.0
+          },
+          "generatorStatus": 1,
+          "helicity": 0,
+          "mass": 0.1056583715,
+          "momentum": {
+            "x": -3.08356423283867,
+            "y": -3.803148759647635,
+            "z": 8.719385937894293
+          },
+          "momentumAtEndpoint": {
+            "x": -3.083874217596292,
+            "y": -3.7909230445692006,
+            "z": 8.696642018100153
+          },
+          "parents": [],
+          "simulatorStatus": 33554432,
+          "time": 0.0,
+          "vertex": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        }
+      ],
+      "isSubsetColl": false
+    },
+    "SciFiTrackerCollection": {
+      "collID": 2402077386,
+      "collSchemaVersion": 6,
+      "collType": "edm4hep::SimTrackerHitCollection",
+      "collection": [],
+      "isSubsetColl": false
+    },
+    "edm4hepVersion": "1.0.0",
+    "podioVersion": "1.7.0"
+  }
+}

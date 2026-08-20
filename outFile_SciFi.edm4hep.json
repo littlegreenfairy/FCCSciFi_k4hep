@@ -1,0 +1,57 @@
+{
+  "Event 0": {
+    "SciFiTrackerCollection": {
+      "collID": 2402077386,
+      "collSchemaVersion": 6,
+      "collType": "edm4hep::SimTrackerHitCollection",
+      "collection": [],
+      "isSubsetColl": false
+    },
+    "edm4hepVersion": "1.0.0",
+    "podioVersion": "1.7.0"
+  },
+  "Event 1": {
+    "SciFiTrackerCollection": {
+      "collID": 2402077386,
+      "collSchemaVersion": 6,
+      "collType": "edm4hep::SimTrackerHitCollection",
+      "collection": [],
+      "isSubsetColl": false
+    },
+    "edm4hepVersion": "1.0.0",
+    "podioVersion": "1.7.0"
+  },
+  "Event 2": {
+    "SciFiTrackerCollection": {
+      "collID": 2402077386,
+      "collSchemaVersion": 6,
+      "collType": "edm4hep::SimTrackerHitCollection",
+      "collection": [],
+      "isSubsetColl": false
+    },
+    "edm4hepVersion": "1.0.0",
+    "podioVersion": "1.7.0"
+  },
+  "Event 3": {
+    "SciFiTrackerCollection": {
+      "collID": 2402077386,
+      "collSchemaVersion": 6,
+      "collType": "edm4hep::SimTrackerHitCollection",
+      "collection": [],
+      "isSubsetColl": false
+    },
+    "edm4hepVersion": "1.0.0",
+    "podioVersion": "1.7.0"
+  },
+  "Event 4": {
+    "SciFiTrackerCollection": {
+      "collID": 2402077386,
+      "collSchemaVersion": 6,
+      "collType": "edm4hep::SimTrackerHitCollection",
+      "collection": [],
+      "isSubsetColl": false
+    },
+    "edm4hepVersion": "1.0.0",
+    "podioVersion": "1.7.0"
+  }
+}

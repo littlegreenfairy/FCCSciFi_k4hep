@@ -2,8 +2,7 @@ from DDSim.DD4hepSimulation import DD4hepSimulation
 
 SIM = DD4hepSimulation()
 
-# Building a modular physics list
-SIM.physics.list = None
+SIM.physics.list = "QGSP_BERT"
 
 SIM.physics.rangecut = 1.0 #like in SciFiMatG4's PhysicsList.cc 
 
@@ -15,10 +14,6 @@ def setupOpticalPhysics(kernel):
 
     seq = kernel.physicsList()
 
-    em = PhysicsList(kernel, "G4EmStandardPhysics/EmStandardPhys")
-    em.enableUI()
-    seq.adopt(em)
-
     cerenkov = PhysicsList(kernel, "Geant4CerenkovPhysics/CerenkovPhys")
     cerenkov.MaxNumPhotonsPerStep = 100
     cerenkov.MaxBetaChangePerStep = 10.0
@@ -27,24 +22,25 @@ def setupOpticalPhysics(kernel):
     seq.adopt(cerenkov)
 
     scintillation = PhysicsList(kernel, "Geant4ScintillationPhysics/ScintillationPhys")
-    scintillation.ScintByParticleType = False
+    # Property is named "ByParticleType" here, not "ScintByParticleType" --
+    # confirmed via hasProperty() on the live object in this DD4hep release.
+    scintillation.ByParticleType = False
     scintillation.VerboseLevel = 0
     scintillation.enableUI()
     seq.adopt(scintillation)
 
     ph = PhysicsList(kernel, "Geant4OpticalPhotonPhysics/OpticalGammaPhys")
     ph.addParticleConstructor("G4OpticalPhoton")
-    ph.WLSTimeProfile = "exponential"
+    # WLSTimeProfile is NOT a valid property in this DD4hep release
+    # (hasProperty() returned False on the live object) -- dropped rather
+    # than guess a name. Not required for photon production/detection,
+    # only affects the statistical shape of the WLS re-emission delay.
     ph.VerboseLevel = 0
     ph.BoundaryInvokeSD = False 
     #Disables triggering the sensitive-detector hit at the geometry-boundary step
     #(fix inherited from ARC simulation)
     ph.enableUI()
     seq.adopt(ph)
-
-    hadronic = PhysicsList(kernel, "G4HadronPhysicsQGSP_BERT/HadronPhys")
-    hadronic.enableUI()
-    seq.adopt(hadronic)
 
     return None
 

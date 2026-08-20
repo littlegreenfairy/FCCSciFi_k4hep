@@ -238,33 +238,39 @@ namespace {
       double y_strip    = y_dist_sipm * ( n_layers / 2.0 ) - fiber_radius / 2.0 - y_dist_sipm * (double)( n_layers / 2 ); //vertical alignment of the strip row
       double y_pix_base = y_dist_sipm * ( n_layers / 2.0 ) - fiber_radius + pixel_dim_y - y_dist_sipm * (double)( n_layers / 2 ); //vertical alignment of the pixel grid
 
-      // Strip placement
+      double pz = -sipm_half_z + strip_thickness + pixel_thickness/2.0 + air_gap_sensitive;
 
-      double x_offset = strip_width * (n_strips_x - 1) / 2.0;
-      for ( int k = 0; k < n_strips_x; ++k ) {
-      double x_strip = strip_width*k - x_offset;
-      dd4hep::Position stripPos( x_strip, y_strip, strip_thickness/2.0 + air_gap_sensitive - sipm_half_z );
-      dd4hep::PlacedVolume stripPV = sipmVol.placeVolume( stripVol, stripPos );
+      dd4hep::Box    stripContainerSolid( strip_width/2.0, (strip_height*1.2)/2.0, pixel_thickness/2.0 );
+      dd4hep::Volume stripContainer( "lvSciFiStripContainer", stripContainerSolid, description.air() );
+      stripContainer.setVisAttributes( description.invisible() );
 
-      // Pixel placement
       for ( int i = 0; i < npixel_strip_width; ++i ) {
         for ( int j = 0; j < npixel_strip_height; ++j ) {
-          double px = x_strip - strip_width/2.0  + pixel_dim_x/2.0 + i*pixel_dim_x;
+          double px = -strip_width/2.0 + pixel_dim_x/2.0 + i*pixel_dim_x;   // local to the strip now
           double py = y_pix_base - strip_height/2.0 + pixel_dim_y/2.0 + j*pixel_dim_y;
-          double pz = -sipm_half_z + strip_thickness + pixel_thickness/2.0 + air_gap_sensitive;
-          dd4hep::Position pixPos( px, py, pz );
-          dd4hep::PlacedVolume pixelPV = sipmVol.placeVolume( pixelVol, pixPos );
-          // Explicit copy number so a hit's pixel (i,j) and strip (k) can be decoded back 
-          int sipm_copy_no = i + npixel_strip_width*j + k*npixel_strip_width*npixel_strip_height;
-          dd4hep::PlacedVolume pixelsensitiveareaPV =sipmVol.placeVolume( sensitiveVol, sipm_copy_no, pixPos );
-          pixelsensitiveareaPV.addPhysVolID( "strip", k );
+          dd4hep::Position pixPos( px, py, 0.0 );
+          dd4hep::PlacedVolume pixelPV = stripContainer.placeVolume( pixelVol, pixPos );
+          int sipm_copy_no = i + npixel_strip_width*j;
+          dd4hep::PlacedVolume pixelsensitiveareaPV = stripContainer.placeVolume( sensitiveVol, sipm_copy_no, pixPos );
           pixelsensitiveareaPV.addPhysVolID( "pixelX", i );
           pixelsensitiveareaPV.addPhysVolID( "pixelY", j );
         }
       }
 
+      // Strip placement
+
+      double x_offset = strip_width * (n_strips_x - 1) / 2.0;
+      for ( int k = 0; k < n_strips_x; ++k ) {
+        double x_strip = strip_width*k - x_offset;
+        dd4hep::Position stripPos( x_strip, y_strip, strip_thickness/2.0 + air_gap_sensitive - sipm_half_z );
+        dd4hep::PlacedVolume stripPV = sipmVol.placeVolume( stripVol, stripPos );
+
+        dd4hep::Position stripContainerPos( x_strip, 0.0, pz );
+        dd4hep::PlacedVolume stripContainerPV = sipmVol.placeVolume( stripContainer, stripContainerPos );
+        stripContainerPV.addPhysVolID( "strip", k );
+      }
+
     }
-    }  
     return sipmVol;
   }
 

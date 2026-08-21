@@ -160,7 +160,6 @@ namespace {
       clad1Vol.setVisAttributes( description, "SciFi:FiberClad1Vis" );
       clad2Vol.setVisAttributes( description, "SciFi:FiberClad2Vis" );
 
-
       dd4hep::OpticalSurfaceManager surfMgr   = description.surfaceManager();
       coreCladSurf                            = surfMgr.opticalSurface( "Core_InnerClad_Surface" );
       cladCladSurf                            = surfMgr.opticalSurface( "InnerClad_OuterClad_Surface" );

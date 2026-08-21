@@ -17,7 +17,7 @@ def setupOpticalPhysics(kernel):
     cerenkov = PhysicsList(kernel, "Geant4CerenkovPhysics/CerenkovPhys")
     cerenkov.MaxNumPhotonsPerStep = 100
     cerenkov.MaxBetaChangePerStep = 10.0
-    cerenkov.VerboseLevel = 0
+    cerenkov.VerboseLevel = 1
     cerenkov.enableUI()
     seq.adopt(cerenkov)
 
@@ -25,22 +25,26 @@ def setupOpticalPhysics(kernel):
     # Property is named "ByParticleType" here, not "ScintByParticleType" --
     # confirmed via hasProperty() on the live object in this DD4hep release.
     scintillation.ByParticleType = False
-    scintillation.VerboseLevel = 0
+    scintillation.VerboseLevel = 1
     scintillation.enableUI()
     seq.adopt(scintillation)
 
     ph = PhysicsList(kernel, "Geant4OpticalPhotonPhysics/OpticalGammaPhys")
     ph.addParticleConstructor("G4OpticalPhoton")
-    # WLSTimeProfile is NOT a valid property in this DD4hep release
-    # (hasProperty() returned False on the live object) -- dropped rather
-    # than guess a name. Not required for photon production/detection,
-    # only affects the statistical shape of the WLS re-emission delay.
-    ph.VerboseLevel = 0
+    # WLSTimeProfile not implemented, we'll have to figure out how to set the time profile for wavelength-shifting photons later
+    ph.VerboseLevel = 1
     ph.BoundaryInvokeSD = False 
     #Disables triggering the sensitive-detector hit at the geometry-boundary step
     #(fix inherited from ARC simulation)
     ph.enableUI()
     seq.adopt(ph)
+
+    # Geometric step-by-step trace
+    from DDG4 import SteppingAction
+    step_trace = SteppingAction(kernel, "Geant4TestStepAction/StepTrace")
+    step_trace.OutputLevel = 1
+    step_trace.enableUI()
+    kernel.steppingAction().adopt(step_trace)
 
     return None
 
@@ -50,3 +54,4 @@ SIM.physics.setupUserPhysics(setupOpticalPhysics)
 # Use DD4hep optical tracker like for ARC (SciFiTracker is the detector name in the xml file)
 SIM.action.mapActions["SciFiTracker"] = "Geant4OpticalTrackerAction"
 SIM.filter.mapDetFilter["SciFiTracker"] = None
+

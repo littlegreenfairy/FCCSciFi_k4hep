@@ -251,3 +251,7 @@ test/gaudi_opts/testConverterConstants.py
 .claude/
 .codex/
 .aider.*
+
+# Output files
+
+outputdata/

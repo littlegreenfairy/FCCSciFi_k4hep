@@ -55,3 +55,10 @@ SIM.physics.setupUserPhysics(setupOpticalPhysics)
 SIM.action.mapActions["SciFiTracker"] = "Geant4OpticalTrackerAction"
 SIM.filter.mapDetFilter["SciFiTracker"] = None
 
+# Optical photons carry only a few eV, so DDSim's default particle-saving energy cut
+# would silently drop them from the output MCParticles collection even when they are
+# genuinely produced. saveProcesses alone did not surface them (process-name mismatch?),
+# so force-save everything for now -- revisit with a narrower cut once confirmed working.
+SIM.part.keepAllParticles = True
+SIM.part.minimalKineticEnergy = "0*eV"
+

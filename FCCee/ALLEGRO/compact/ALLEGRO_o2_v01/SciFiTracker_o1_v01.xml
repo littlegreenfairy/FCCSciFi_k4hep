@@ -57,7 +57,7 @@
 </define>
 
 <includes>
-  <gdmlFile ref="SciFi_materials.xml"/>
+  <file ref="SciFi_materials.xml"/>
 </includes>
 
 <detectors>

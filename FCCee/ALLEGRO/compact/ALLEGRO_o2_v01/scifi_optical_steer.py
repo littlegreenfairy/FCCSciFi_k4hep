@@ -52,7 +52,7 @@ def setupOpticalPhysics(kernel):
 SIM.physics.setupUserPhysics(setupOpticalPhysics)
 
 # Use DD4hep optical tracker like for ARC (SciFiTracker is the detector name in the xml file)
-SIM.action.mapActions["SciFiTracker"] = "Geant4OpticalTrackerAction"
+SIM.action.mapActions["SciFiTracker"] = "Geant4SciFiOpticalTrackerAction"
 SIM.filter.mapDetFilter["SciFiTracker"] = None
 
 # Optical photons carry only a few eV, so DDSim's default particle-saving energy cut

@@ -1,4 +1,7 @@
 <lccdd>
+
+  <properties>
+
     <matrix name="SiPM_PDE" coldim="2" values="
       1.549803*eV  0.0000
       1.771203*eV  0.3248
@@ -74,8 +77,6 @@
       3.542406*eV  0.6252
       6.199210*eV  0.0000
       "/>
-
-  <properties>
 
     <!-- Scintillating core -->
     <matrix name="RINDEX__ScintCore" coldim="2" values="
@@ -4266,6 +4267,10 @@
       <composite n="4" ref="O"/>
       <property name="RINDEX"    ref="RINDEX__Epoxy"/>
       <property name="ABSLENGTH" ref="ABSLENGTH__Epoxy"/>
+      <!-- SiPM photon detection efficiency: read directly by Geant4SciFiOpticalTrackerAction.
+           Not consumed by G4OpBoundaryProcess: no dielectric_metal surface uses it, since
+           that would conflict with BoundaryInvokeSD=False. -->
+      <property name="EFFICIENCY" ref="SiPM_PDE"/>
     </material>
 
     <material name="SciFiAirGap">

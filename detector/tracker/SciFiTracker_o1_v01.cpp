@@ -206,12 +206,12 @@ namespace {
 
       // Outer container volume for the SiPMs
       dd4hep::Box    sipmSolid( sipm_width/2.0, (strip_height*1.2)/2.0, sipm_half_z );
-      sipmVol = dd4hep::Volume( "lvSciFiSiPMArray", sipmSolid, description.air() );
+      sipmVol = dd4hep::Volume( "lvSciFiSiPMArray", sipmSolid, description.material("SciFiAirGap") );
       sipmVol.setVisAttributes( description, "SciFi:SiPMVis" );
 
       // Solid + volume for one strip
       dd4hep::Box    stripSolid( strip_width/2.0, strip_height/2.0, strip_thickness/2.0 );
-      stripVol = dd4hep::Volume( "lvSciFiSiPMStrip", stripSolid, description.material("Epoxy") );
+      stripVol = dd4hep::Volume( "lvSciFiSiPMStrip", stripSolid, description.material("SciFiEpoxy") );
       stripVol.setVisAttributes( description.invisible() );
 
       // Solid + volume for one pixel
@@ -222,12 +222,12 @@ namespace {
                                 pixel_dim_y*std::sqrt(pixel_sensitive_ratio)/2.0, pixel_thickness/2.0 );
       dd4hep::SubtractionSolid pixelSolid( pixelBase, sensitiveBase );  // "dead" pixel shell
 
-      pixelVol = dd4hep::Volume( "lvSciFiPixel", pixelSolid, description.material("Epoxy") );
+      pixelVol = dd4hep::Volume( "lvSciFiPixel", pixelSolid, description.material("SciFiEpoxy") );
       pixelVol.setVisAttributes( description.invisible() );
 
       // Sensitive pixels to produce hits
 
-      sensitiveVol = dd4hep::Volume( "lvSciFiPixelSensitive", sensitiveBase, description.material("Epoxy") );
+      sensitiveVol = dd4hep::Volume( "lvSciFiPixelSensitive", sensitiveBase, description.material("SciFiEpoxy") );
       sensitiveVol.setVisAttributes( description.invisible() );
       sensitiveVol.setSensitiveDetector( sensitive );
       
@@ -240,7 +240,7 @@ namespace {
       double pz = -sipm_half_z + strip_thickness + pixel_thickness/2.0 + air_gap_sensitive;
 
       dd4hep::Box    stripContainerSolid( strip_width/2.0, (strip_height*1.2)/2.0, pixel_thickness/2.0 );
-      dd4hep::Volume stripContainer( "lvSciFiStripContainer", stripContainerSolid, description.air() );
+      dd4hep::Volume stripContainer( "lvSciFiStripContainer", stripContainerSolid, description.material("SciFiAirGap") );
       stripContainer.setVisAttributes( description.invisible() );
 
       for ( int i = 0; i < npixel_strip_width; ++i ) {

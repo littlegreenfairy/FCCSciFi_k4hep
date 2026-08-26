@@ -49,6 +49,13 @@ def setupOpticalPhysics(kernel, _sim=SIM):
 SIM.physics.setupUserPhysics(setupOpticalPhysics)
 
 # Use DD4hep optical tracker like for ARC (SciFiTracker is the detector name in the xml file)
-SIM.action.mapActions["SciFiTracker"] = "Geant4OpticalTrackerAction"
+SIM.action.mapActions["SciFiTracker"] = "Geant4SciFiOpticalTrackerAction"
 SIM.filter.mapDetFilter["SciFiTracker"] = None
+
+# Optical photons carry only a few eV, so DDSim's default particle-saving energy cut
+# would silently drop them from the output MCParticles collection even when they are
+# genuinely produced. saveProcesses alone did not surface them (process-name mismatch?),
+# so force-save everything for now -- revisit with a narrower cut once confirmed working.
+SIM.part.keepAllParticles = True
+SIM.part.minimalKineticEnergy = "0*eV"
 

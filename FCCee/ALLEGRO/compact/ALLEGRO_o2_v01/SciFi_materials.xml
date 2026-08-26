@@ -1,4 +1,7 @@
 <lccdd>
+
+  <properties>
+
     <matrix name="SiPM_PDE" coldim="2" values="
       1.549803*eV  0.0000
       1.771203*eV  0.3248
@@ -74,8 +77,6 @@
       3.542406*eV  0.6252
       6.199210*eV  0.0000
       "/>
-
-  <properties>
 
     <!-- Scintillating core -->
     <matrix name="RINDEX__ScintCore" coldim="2" values="
@@ -4117,6 +4118,13 @@
       4.4275*eV 0.1*m
       "/>
 
+    <!-- Flat RINDEX for the air gap between fiber end and SiPM. A dedicated material lets the SiPM air gap have RINDEX without
+         adding optical properties to Air everywhere else in ALLEGRO. -->
+    <matrix name="RINDEX__SciFiAirGap" coldim="2" values="
+      1.9*eV    1.0003
+      4.4275*eV 1.0003
+      "/>
+
     <matrix name="RINDEX__EpoxyTi02" coldim="2" values="
       1.77*eV  1.59
       3.54*eV  1.59
@@ -4252,13 +4260,25 @@
       <property name="RAYLEIGH"  ref="RAYLEIGH__OuterCladding"/>
     </material>
 
-    <material name="Epoxy">
+    <material name="SciFiEpoxy">
       <D type="density" value="1.15" unit="g/cm3"/>
       <composite n="21" ref="C"/>
       <composite n="24" ref="H"/>
       <composite n="4" ref="O"/>
       <property name="RINDEX"    ref="RINDEX__Epoxy"/>
       <property name="ABSLENGTH" ref="ABSLENGTH__Epoxy"/>
+      <!-- SiPM photon detection efficiency: read directly by Geant4SciFiOpticalTrackerAction.
+           Not consumed by G4OpBoundaryProcess: no dielectric_metal surface uses it, since
+           that would conflict with BoundaryInvokeSD=False. -->
+      <property name="EFFICIENCY" ref="SiPM_PDE"/>
+    </material>
+
+    <material name="SciFiAirGap">
+      <D type="density" unit="g/cm3" value="0.0012"/>
+      <fraction n="0.754" ref="N"/>
+      <fraction n="0.234" ref="O"/>
+      <fraction n="0.012" ref="Ar"/>
+      <property name="RINDEX" ref="RINDEX__SciFiAirGap"/>
     </material>
 
     <material name="TiO2">
@@ -4270,13 +4290,10 @@
     <material name="EpoxyTi02">
       <D type="density" value="1.347" unit="g/cm3"/>
       <fraction n="0.20" ref="TiO2"/>
-      <fraction n="0.80" ref="Epoxy"/>
+      <fraction n="0.80" ref="SciFiEpoxy"/>
       <property name="RINDEX" ref="RINDEX__EpoxyTi02"/>
       <property name="ABSLENGTH" ref="ABSLENGTH__EpoxyTi02"/>
-      <property name="MIEHG" ref="MIEHG__EpoxyTi02"/>
-      <property name="MIEHG_FORWARD_RATIO" ref="MIEHG_FORWARD_RATIO__EpoxyTi02"/>
-      <property name="MIEHG_FORWARD" ref="MIEHG_FORWARD__EpoxyTi02"/>
-      <property name="MIEHG_BACKWARD" ref="MIEHG_BACKWARD__EpoxyTi02"/>
+      <!-- Mie scattering (MIEHG) dropped for now -->
     </material>
 
   </materials>

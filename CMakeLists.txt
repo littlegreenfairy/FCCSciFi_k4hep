@@ -126,6 +126,7 @@ file(GLOB G4sources
   ./plugins/DRTubesSDAction.cpp
   ./plugins/SCEPCal_MainSDAction.cpp
   ./plugins/SCEPCal_TimingSDAction.cpp
+  ./plugins/SciFiSteppingAction.cpp
 )
 
 if(DD4HEP_USE_PYROOT)

@@ -9,7 +9,7 @@ SIM.physics.rangecut = 1.0 #like in SciFiMatG4's PhysicsList.cc
 # Registers Cerenkov + Scintillation + optical-photon transport physics, together with the standard physics lists
 # Adapted from k4geo/example/arcfullsim.py's setupCerenkov()
 
-def setupOpticalPhysics(kernel):
+def setupOpticalPhysics(kernel, _sim=SIM):
     from DDG4 import PhysicsList
 
     seq = kernel.physicsList()
@@ -31,20 +31,17 @@ def setupOpticalPhysics(kernel):
 
     ph = PhysicsList(kernel, "Geant4OpticalPhotonPhysics/OpticalGammaPhys")
     ph.addParticleConstructor("G4OpticalPhoton")
-    # WLSTimeProfile not implemented, we'll have to figure out how to set the time profile for wavelength-shifting photons later
     ph.VerboseLevel = 1
-    ph.BoundaryInvokeSD = False 
-    #Disables triggering the sensitive-detector hit at the geometry-boundary step
-    #(fix inherited from ARC simulation)
+    ph.BoundaryInvokeSD = False
     ph.enableUI()
     seq.adopt(ph)
 
-    # Geometric step-by-step trace
     from DDG4 import SteppingAction
-    step_trace = SteppingAction(kernel, "Geant4TestStepAction/StepTrace")
-    step_trace.OutputLevel = 1
-    step_trace.enableUI()
-    kernel.steppingAction().adopt(step_trace)
+    scifi_step = SteppingAction(kernel, "SciFiSteppingAction/SciFiStep")
+    scifi_step.OutputFile = _sim.outputFile
+    scifi_step.KillEscapedPhotons = False
+    scifi_step.enableUI()
+    kernel.steppingAction().adopt(scifi_step)
 
     return None
 

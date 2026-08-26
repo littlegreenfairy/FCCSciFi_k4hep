@@ -1,7 +1,8 @@
 <lccdd>
 
   <properties>
-
+    
+    <!-- PDE for H2024 OV = 6V -->
     <matrix name="SiPM_PDE" coldim="2" values="
       1.549803*eV  0.0000
       1.771203*eV  0.3248

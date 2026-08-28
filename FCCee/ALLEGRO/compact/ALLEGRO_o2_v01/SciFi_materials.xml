@@ -4110,8 +4110,8 @@
          Needed so G4OpticalBoundaryProcess has a defined interface where a
          photon reaches the sensitive pixel volume. -->
     <matrix name="RINDEX__Epoxy" coldim="2" values="
-      1.9*eV    1.59
-      4.4275*eV 1.59
+      1.9*eV    1.512
+      4.4275*eV 1.512
       "/>
 
     <matrix name="ABSLENGTH__Epoxy" coldim="2" values="

@@ -255,3 +255,5 @@ test/gaudi_opts/testConverterConstants.py
 # Output files
 
 outputdata/
+output_*/
+scifilog.txt

@@ -29,10 +29,20 @@ def setupOpticalPhysics(kernel, _sim=SIM):
     scintillation.enableUI()
     seq.adopt(scintillation)
 
+    # Activates G4OpWLS + sets its time profile, from compiled C++ (see
+    # plugins/Geant4SciFiWLSSetup.cpp). Must sit here, adopted after
+    # scintillation and before ph: Scintillation's own construction
+    # unconditionally overwrites WLSTimeProfile with its own empty default,
+    # so setting these any earlier (including from Python) gets silently wiped.
+    wls = PhysicsList(kernel, "Geant4SciFiWLSSetup/WLSSetup")
+    seq.adopt(wls)
+
     ph = PhysicsList(kernel, "Geant4OpticalPhotonPhysics/OpticalGammaPhys")
     ph.addParticleConstructor("G4OpticalPhoton")
     ph.VerboseLevel = 1
     ph.BoundaryInvokeSD = False
+    #Disables triggering the sensitive-detector hit at the geometry-boundary step
+    #(fix inherited from ARC simulation)
     ph.enableUI()
     seq.adopt(ph)
 

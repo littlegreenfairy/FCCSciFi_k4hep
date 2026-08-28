@@ -128,6 +128,7 @@ file(GLOB G4sources
   ./plugins/SCEPCal_TimingSDAction.cpp
   ./plugins/SciFiSteppingAction.cpp
   ./plugins/Geant4SciFiOpticalTrackerAction.cpp
+  ./plugins/Geant4SciFiWLSSetup.cpp
 )
 
 if(DD4HEP_USE_PYROOT)

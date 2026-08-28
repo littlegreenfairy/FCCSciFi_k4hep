@@ -1,7 +1,8 @@
 // SciFi stepping action for DD4hep/DDG4
 // Tracks optical photon boundary processes, fiber exit photons,
-// and primary particle steps. At end of run, merges stepping data
-// as EDM4hep SimTrackerHit collections into the main ddsim output file.
+// primary particle steps, and photon loss classification.
+// At end of run, merges stepping data as EDM4hep SimTrackerHit
+// collections into the main ddsim output file.
 
 #include "DDG4/Geant4SteppingAction.h"
 #include "DDG4/Geant4RunAction.h"
@@ -22,6 +23,9 @@
 #include "podio/ROOTReader.h"
 #include "podio/ROOTWriter.h"
 #include "edm4hep/SimTrackerHitCollection.h"
+
+#include <G4Material.hh>
+#include <G4MaterialPropertiesTable.hh>
 
 #include <cstdio>
 #include <map>
@@ -46,6 +50,7 @@ namespace sim {
       if (!m_endRunRegistered) {
         context()->runAction().callAtEnd(this, &SciFiSteppingAction::endRun);
         m_endRunRegistered = true;
+        dumpWLSDiagnostics(step);
       }
 
       int eventID = G4RunManager::GetRunManager()->GetCurrentEvent()->GetEventID();
@@ -85,6 +90,73 @@ namespace sim {
       std::vector<StepData>   primaries;
     };
 
+    struct PhotonCounters {
+      int nTotal{0};
+      int nScint{0};
+      int nCerenkov{0};
+      int nWLSCreated{0};
+      int nFiberExits{0};
+      int nDetected{0};
+      int nAbsWLS{0};
+      int nAbsAtten{0};
+      int nAbsClad{0};
+      int nAbsSiPM{0};
+      int nNonCaptured{0};
+      int nAbsUnknown{0};
+      int nLostSurface{0};
+      int nLostEscaped{0};
+      int nLostWorld{0};
+      int nLostOther{0};
+
+      void clear() { *this = PhotonCounters{}; }
+    };
+
+    // creator process category for a track
+    enum PhotonType { kPrimary = 0, kWLS = 1 };
+
+    // ── diagnostics ─────────────────────────────────────────────────
+
+    void dumpWLSDiagnostics(const G4Step* step) {
+      // Check if OpWLS process exists on optical photons
+      G4ProcessManager* pmgr = G4OpticalPhoton::OpticalPhoton()->GetProcessManager();
+      bool foundWLS = false;
+      if (pmgr) {
+        G4ProcessVector* pv = pmgr->GetProcessList();
+        info("=== Optical photon processes ===");
+        for (G4int i = 0; i < pv->entries(); ++i) {
+          info("  process[%d]: %s", i, (*pv)[i]->GetProcessName().c_str());
+          if ((*pv)[i]->GetProcessName() == "OpWLS") foundWLS = true;
+        }
+      }
+      info("  OpWLS registered: %s", foundWLS ? "YES" : "NO");
+
+      // Check core material for WLS properties
+      auto* preVol = step->GetPreStepPoint()->GetPhysicalVolume();
+      if (preVol) {
+        G4Material* mat = preVol->GetLogicalVolume()->GetMaterial();
+        info("=== Material: %s ===", mat->GetName().c_str());
+        G4MaterialPropertiesTable* mpt = mat->GetMaterialPropertiesTable();
+        if (mpt) {
+          auto* wlsComp = mpt->GetProperty("WLSCOMPONENT");
+          auto* wlsAbs  = mpt->GetProperty("WLSABSLENGTH");
+          bool  hasTime = mpt->ConstPropertyExists("WLSTIMECONSTANT");
+          info("  WLSCOMPONENT:    %s (entries: %zu)",
+               wlsComp ? "YES" : "NO", wlsComp ? wlsComp->GetVectorLength() : 0);
+          info("  WLSABSLENGTH:    %s (entries: %zu)",
+               wlsAbs ? "YES" : "NO", wlsAbs ? wlsAbs->GetVectorLength() : 0);
+          info("  WLSTIMECONSTANT: %s", hasTime ? "YES" : "NO");
+          if (hasTime)
+            info("  WLSTIMECONSTANT value: %g ns", mpt->GetConstProperty("WLSTIMECONSTANT") / CLHEP::ns);
+          if (wlsAbs && wlsAbs->GetVectorLength() > 0) {
+            info("  WLSABSLENGTH at 3.0 eV: %g mm", wlsAbs->Value(3.0 * CLHEP::eV) / CLHEP::mm);
+            info("  WLSABSLENGTH at 3.5 eV: %g mm", wlsAbs->Value(3.5 * CLHEP::eV) / CLHEP::mm);
+          }
+        } else {
+          info("  No MaterialPropertiesTable!");
+        }
+      }
+    }
+
     // ── volume / process helpers ────────────────────────────────────
 
     G4String getPreLVName(const G4Step* step) const {
@@ -110,6 +182,12 @@ namespace sim {
       return 0;
     }
 
+    bool isWLSPhoton(const G4Step* step) const {
+      auto* proc = step->GetTrack()->GetCreatorProcess();
+      if (!proc) return false;
+      return proc->GetProcessName() == "OpWLS";
+    }
+
     static bool contains(const G4String& str, const char* sub) {
       return str.find(sub) != std::string::npos;
     }
@@ -132,23 +210,33 @@ namespace sim {
       G4int trackId    = step->GetTrack()->GetTrackID();
       G4double stepLen = step->GetStepLength();
 
+      bool wls = isWLSPhoton(step);
+
       if (m_seenPhotonTracks.insert(trackId).second) {
         auto* proc = step->GetTrack()->GetCreatorProcess();
         G4String procName = proc ? proc->GetProcessName() : "none";
         bool isScint = (procName == "Scintillation" || procName == "ScintillationPhys");
         bool isCerenkov = (procName == "Cerenkov" || procName == "CerenkovPhys");
-        if (isScint) m_nScintPhotons++;
-        else if (isCerenkov) m_nCerenkovPhotons++;
-        else {
-          m_nOtherPhotons++;
-          if (m_firstUnknownProcess.empty()) m_firstUnknownProcess = procName;
+
+        if (wls) {
+          m_cWLS.nTotal++;
+          m_cWLS.nWLSCreated++;
+          m_cAll.nWLSCreated++;
+        } else {
+          m_cAll.nTotal++;
+          m_cPrim.nTotal++;
+          if (isScint) { m_cAll.nScint++; m_cPrim.nScint++; }
+          else if (isCerenkov) { m_cAll.nCerenkov++; m_cPrim.nCerenkov++; }
         }
       }
 
       G4String preLV  = getPreLVName(step);
-      G4String postLV = getPostLVName(step);
+
+      bool killedByUs = false;
 
       if (step->GetPostStepPoint()->GetStepStatus() == fGeomBoundary) {
+
+        G4String postLV = getPostLVName(step);
 
         if (postLV == "lvSciFiMatSlab2" && preLV == "lvSciFiFiberClad2") {
           if (stepLen > 0) m_reflSurf[trackId]++;
@@ -173,16 +261,27 @@ namespace sim {
           }
         }
 
+        // Track photons escaping fiber: cladding → material
+        if ((preLV == "lvSciFiFiberClad2" || preLV == "lvSciFiFiberClad1") &&
+            postLV == "lvSciFiMatSlab2") {
+          m_escapedFiber.insert(trackId);
+        }
+
         bool preIsSiPM  = contains(preLV, "SiPM") || contains(preLV, "Pixel");
         bool postIsSiPM = contains(postLV, "SiPM") || contains(postLV, "Pixel");
         if (postIsSiPM && !preIsSiPM) {
           storeFiberExitPhoton(step, trackId);
+          m_fiberExitTracks.insert(trackId);
+          m_cAll.nFiberExits++;
+          if (wls) m_cWLS.nFiberExits++;
+          else m_cPrim.nFiberExits++;
         }
 
         if (m_killEscapedPhotons &&
             (preLV == "lvSciFiFiberClad2" || preLV == "lvSciFiFiberClad1") &&
             postLV == "lvSciFiMatSlab2") {
           step->GetTrack()->SetTrackStatus(fStopAndKill);
+          killedByUs = true;
         }
 
       } else {
@@ -195,6 +294,55 @@ namespace sim {
       if (preLV == "lvSciFiFiberCore") m_lengthCore[trackId] += stepLen;
       if (preLV == "lvSciFiFiberClad1") m_lengthClad1[trackId] += stepLen;
       if (preLV == "lvSciFiFiberClad2") m_lengthClad2[trackId] += stepLen;
+
+      if (step->GetTrack()->GetTrackStatus() == fStopAndKill) {
+        trackPhotonDeath(step, trackId, killedByUs, wls);
+      }
+    }
+
+    // ── photon loss classification ──────────────────────────────────
+
+    void classifyLoss(const G4Step* step, G4int trackId, bool killedByUs,
+                      const G4String& procName, const G4String& preLV,
+                      PhotonCounters& c) {
+      if (m_fiberExitTracks.count(trackId)) {
+        c.nDetected++;
+        return;
+      }
+      if (killedByUs) { c.nLostEscaped++; return; }
+
+      auto* postVol = step->GetPostStepPoint()->GetPhysicalVolume();
+      if (!postVol) { c.nLostWorld++; return; }
+
+      if (procName == "OpAbsorption" || procName == "OpWLS") {
+        if (preLV == "lvSciFiFiberCore") {
+          if (procName == "OpWLS") c.nAbsWLS++;
+          else c.nAbsAtten++;
+        }
+        else if (preLV == "lvSciFiFiberClad1" || preLV == "lvSciFiFiberClad2") c.nAbsClad++;
+        else if (contains(preLV, "SiPM") || contains(preLV, "Pixel")) c.nAbsSiPM++;
+        else if (m_escapedFiber.count(trackId)) c.nNonCaptured++;
+        else c.nAbsUnknown++;
+      } else if (step->GetPostStepPoint()->GetStepStatus() == fGeomBoundary) {
+        c.nLostSurface++;
+      } else {
+        c.nLostOther++;
+      }
+    }
+
+    void trackPhotonDeath(const G4Step* step, G4int trackId, bool killedByUs, bool wls) {
+      auto* proc = step->GetPostStepPoint()->GetProcessDefinedStep();
+      G4String procName = proc ? proc->GetProcessName() : "unknown";
+      G4String preLV = getPreLVName(step);
+
+      classifyLoss(step, trackId, killedByUs, procName, preLV, m_cAll);
+      if (wls) classifyLoss(step, trackId, killedByUs, procName, preLV, m_cWLS);
+      else     classifyLoss(step, trackId, killedByUs, procName, preLV, m_cPrim);
+
+      if (m_cAll.nLostOther > 0 && m_cAll.nLostOther <= 3 &&
+          !m_fiberExitTracks.count(trackId) && !killedByUs) {
+        info("  unknown loss: proc='%s' vol='%s'", procName.c_str(), preLV.c_str());
+      }
     }
 
     void storeFiberExitPhoton(const G4Step* step, G4int trackId) {
@@ -238,23 +386,31 @@ namespace sim {
 
     // ── event / run lifecycle ───────────────────────────────────────
 
+    void printCounters(const char* label, const PhotonCounters& c) {
+      info("  [%s] %d photons (%d Cerenkov, %d scintillation, %d WLS-created) | %d fiber exits, %d detected",
+           label, c.nTotal, c.nCerenkov, c.nScint, c.nWLSCreated, c.nFiberExits, c.nDetected);
+      info("  [%s] losses: %d WLS-abs, %d atten-abs, %d abs-clad, %d abs-SiPM, %d non-captured, %d surface, %d escaped, %d left-world, %d unknown, %d other",
+           label, c.nAbsWLS, c.nAbsAtten, c.nAbsClad, c.nAbsSiPM, c.nNonCaptured,
+           c.nLostSurface, c.nLostEscaped, c.nLostWorld, c.nAbsUnknown, c.nLostOther);
+    }
+
     void printEventSummary() {
-      size_t nExit = m_allEvents.count(m_currentEventID)
-                         ? m_allEvents[m_currentEventID].photons.size()
-                         : 0;
-      info("+++ Event %d: %d scintillation, %d Cerenkov, %d other (first='%s') photons, %zu total, %zu fiber exits",
-           m_currentEventID, m_nScintPhotons, m_nCerenkovPhotons,
-           m_nOtherPhotons, m_firstUnknownProcess.c_str(),
-           m_seenPhotonTracks.size(), nExit);
+      info("+++ Event %d summary:", m_currentEventID);
+      printCounters("ALL", m_cAll);
+      printCounters("WLS", m_cWLS);
+      PhotonCounters cSurv = m_cPrim;
+      cSurv.nTotal -= m_cAll.nWLSCreated;
+      printCounters("Primary", cSurv);
     }
 
     void beginEvent(int eventID) {
       m_currentEventID = eventID;
       m_seenPhotonTracks.clear();
-      m_nScintPhotons = 0;
-      m_nCerenkovPhotons = 0;
-      m_nOtherPhotons = 0;
-      m_firstUnknownProcess.clear();
+      m_fiberExitTracks.clear();
+      m_escapedFiber.clear();
+      m_cAll.clear();
+      m_cWLS.clear();
+      m_cPrim.clear();
       m_reflSurf.clear();
       m_reflTotalCladClad.clear();
       m_reflTotalCoreClad.clear();
@@ -348,12 +504,17 @@ namespace sim {
 
     std::map<int, EventData> m_allEvents;
 
+    // Photon tracking sets
     std::set<int> m_seenPhotonTracks;
-    int m_nScintPhotons{0};
-    int m_nCerenkovPhotons{0};
-    int m_nOtherPhotons{0};
-    std::string m_firstUnknownProcess;
+    std::set<int> m_fiberExitTracks;
+    std::set<int> m_escapedFiber;
 
+    // Per-event counters split by photon origin
+    PhotonCounters m_cAll;
+    PhotonCounters m_cWLS;
+    PhotonCounters m_cPrim;
+
+    // Per-event, per-track working maps
     std::map<int, int> m_reflSurf;
     std::map<int, int> m_reflTotalCladClad;
     std::map<int, int> m_reflTotalCoreClad;

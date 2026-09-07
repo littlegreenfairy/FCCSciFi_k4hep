@@ -40,7 +40,7 @@
 <constant name = "SciFi:decayTimeSlow"  value = "1.2"/>
 <constant name = "SciFi:yieldRatio"  value = "0.8"/>
 
-<constant name = "SciFi:interfaceLossProb"  value = "14e-4"/>
+<constant name = "SciFi:interfaceSigmaAlpha"  value = "14e-4"/>
 
 <!-- SiPM parameters -->
 

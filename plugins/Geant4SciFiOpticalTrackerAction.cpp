@@ -1,4 +1,5 @@
 #include "DD4hep/Version.h"
+#include "DD4hep/Printout.h"
 #include "DDG4/Geant4SensDetAction.inl"
 #include "G4OpticalPhoton.hh"
 #include "G4MaterialPropertiesTable.hh"
@@ -11,8 +12,11 @@ namespace dd4hep {
 namespace sim {
 
   /*
-   Sensitive detector action for the SciFi SiPM readout. Like Geant4OpticalTrackerAction, but draws against the sensitive 
-   material's EFFICIENCY property (SiPM_PDE) and only registers a hit if the photon passes. A photon that fails is still killed here
+   Sensitive detector action for the SciFi SiPM readout. Like Geant4OpticalTrackerAction, but draws against the sensitive
+   material's EFFICIENCY property (SiPM_PDE) and only registers a hit if the photon passes. A photon that fails is still killed here.
+
+   Only processes a photon's genuine first entry into the sensitive volume (fGeomBoundary step
+   with nonzero length)
   */
   struct SciFiOpticalTracker {}; // tag type for the Geant4SensitiveAction template
 
@@ -27,26 +31,29 @@ namespace sim {
                                                        G4TouchableHistory* /* hist */) {
     Geant4StepHandler h(step);  //wrapper around G4Step
     bool is_optical = (h.trackDef() == G4OpticalPhoton::OpticalPhotonDefinition());
-    if (is_optical) {
-      step->GetTrack()->SetTrackStatus(fStopAndKill);
-    }
+    if (!is_optical) return true;
 
-    // Missing property table/EFFICIENCY entry -> PDE=1 (always accept).
-    if (is_optical) {
-      G4Material* mat = step->GetPreStepPoint()->GetMaterial();
-      G4MaterialPropertiesTable* mpt = mat ? mat->GetMaterialPropertiesTable() : nullptr;
-      if (mpt) {
-        auto* eff = mpt->GetProperty("EFFICIENCY");
-        if (eff) {
-          G4double energy = step->GetTrack()->GetKineticEnergy();
-          G4double pde    = eff->Value(energy);
-          bool     passed_pde = (G4UniformRand() <= pde);
-          always("+++ PDE lookup: energy(eV)=%f  pde=%f  passed=%d",
-                 energy / CLHEP::eV, pde, passed_pde);
-          if (!passed_pde) return true; // absorbed but not detected, no hit
-        }
-      }
+    bool is_entry = (step->GetPreStepPoint()->GetStepStatus() == fGeomBoundary) &&
+                    (step->GetStepLength() != 0.0);
+    if (!is_entry) return true;
+
+    step->GetTrack()->SetTrackStatus(fStopAndKill);
+
+    G4Material*                mat = step->GetPreStepPoint()->GetMaterial();
+    G4MaterialPropertiesTable* mpt = mat ? mat->GetMaterialPropertiesTable() : nullptr;
+    auto*                      eff = mpt ? mpt->GetProperty("EFFICIENCY") : nullptr;
+    if (!eff) {
+      // No PDE curve on the entered material: reject the hit 
+      dd4hep::printout(dd4hep::WARNING, "SciFiTracker",
+          "+++ No EFFICIENCY property on material '%s' at pixel entry -- rejecting hit "
+          "instead of assuming PDE=1",
+          mat ? mat->GetName().c_str() : "<null>");return true;
     }
+    G4double energy     = step->GetTrack()->GetKineticEnergy();
+    G4double pde        = eff->Value(energy);
+    bool     passed_pde = (G4UniformRand() <= pde);
+    print("+++ PDE lookup: energy(eV)=%f  pde=%f  passed=%d", energy / CLHEP::eV, pde, passed_pde);
+    if (!passed_pde) return true; // absorbed but not detected, no hit
 
     typedef Geant4Tracker::Hit Hit;
     auto      contrib = Hit::extractContribution(step);

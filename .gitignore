@@ -256,4 +256,5 @@ test/gaudi_opts/testConverterConstants.py
 
 outputdata/
 output_*/
+sanitycheckscripts/
 scifilog.txt

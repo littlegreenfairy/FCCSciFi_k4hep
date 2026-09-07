@@ -1,3 +1,11 @@
+/* This is a DD4hep detector description for the SciFi tracker of ALLEGRO, based on the standalone SciFiMatG4 application (https://gitlab.cern.ch/lphe-lab-tools/SciFiMatG4)
+The relevant xml files are SciFi_materials.xml and SciFi_tracker.xml, which are included in the main ALLEGRO_o2_v01.xml file
+Authors: E. De Santis, Ismet Siral
+Based on the DD4Hep implementation of the SciFi tracker at LHCb (https://gitlab.cern.ch/lhcb/Detector/-/blob/master/Detector/FT/src/FT_geo.cpp) and on the k4hep implementation of the ARC detector for CLD (also contained in the k4hep project) for the optical physics
+*/
+
+
+
 
 //#include "Core/UpgradeTags.h"
 #include "DD4hep/DetFactoryHelper.h"

@@ -32,7 +32,18 @@ done
 # -------------------- USER INPUT PARAMETERS ----------------------
 PARTICLE="mu-"
 ENERGY="20*GeV"
-COMMENT="SciFik4hep_singlemat_scan"
+COMMENT="SciFik4hep_singlemat_scan_smearedgun_10k"
+
+# Transverse Gaussian spread of the gun vertex, in mm (0 = point beam).
+# The mat is rotated 90 deg about z, so its width -- the SiPM channel direction --
+# maps to global y. A point beam sits at one fixed phase of the 0.25 mm channel grid
+# and the 0.275 mm fibre lattice, which fixes how a fibre's light is shared between
+# adjacent channels; cluster-level quantities (PE per cluster, cluster size) then
+# depend on that accident rather than on the physics, and the two simulations put
+# the channel boundary in different places. Smearing over several channel pitches
+# averages it out. 1 mm ~ 4 channel pitches (+-3 sigma ~ 24), still tiny next to the
+# 135 mm mat width.
+BEAM_SIGMA_Y="1.0"
 
 K4GEO_DIR="/home/edesanti/FCCk4hep/k4geo"
 COMPACT="FCCee/ALLEGRO/compact/ALLEGRO_o2_v01/ALLEGRO_o2_v01.xml"
@@ -41,12 +52,12 @@ STEERING="FCCee/ALLEGRO/compact/ALLEGRO_o2_v01/scifi_optical_steer.py"
 # Scan the gun's z-injection position along the fiber
 Z_START=-1202
 Z_END=1198
-Z_STEP=600
+Z_STEP=300
 SEED_BASE=3429
 
 # n_events per z position, split into sub-runs of NEVENTSPERRUN each
-NEVENTS=1000
-NEVENTSPERRUN=1000
+NEVENTS=10000
+NEVENTSPERRUN=10000
 
 # -------------------------------------------------------------------
 
@@ -105,6 +116,7 @@ ddsim --compactFile "${COMPACT}" \
       --steeringFile "${STEERING}" \
       --enableGun --gun.particle "${PARTICLE}" --gun.energy "${ENERGY}" \
       --gun.position "881.055*mm 0*mm ${Z}*mm" --gun.direction "1 0 0" \
+      --vertexSigma 0 "${BEAM_SIGMA_Y}" 0 0 \
       --numberOfEvents "${NEVENTSPERRUN}" \
       --random.seed "${SEED}" \
       --outputFile "${OUTFILE}"

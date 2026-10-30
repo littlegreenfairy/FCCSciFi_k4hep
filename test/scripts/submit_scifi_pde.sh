@@ -51,13 +51,13 @@ STEERING="FCCee/ALLEGRO/compact/ALLEGRO_o2_v01/scifi_optical_steer.py"
 
 # Scan the gun's z-injection position along the fiber
 Z_START=-1202
-Z_END=1198
+Z_END=-1202
 Z_STEP=300
 SEED_BASE=3429
 
 # n_events per z position, split into sub-runs of NEVENTSPERRUN each
-NEVENTS=10000
-NEVENTSPERRUN=10000
+NEVENTS=20
+NEVENTSPERRUN=20
 
 # -------------------------------------------------------------------
 
